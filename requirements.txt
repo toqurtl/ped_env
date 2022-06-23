@@ -1,0 +1,20 @@
+# env
+numpy>=1.19
+pandas
+toml>=0.10
+numba>=0.51
+scipy>=1.5
+fastdtw
+
+# bayesian
+pomegranate
+
+# visual
+latex
+SciencePlots
+matplotlib
+
+# reinforcement
+tensorboard
+torch
+gym
