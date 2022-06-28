@@ -2,8 +2,8 @@
     "setting_id": "basic_sfm_2_1",
     "repulsive_force": "social_force",
     "path":{
-        "vid_folder_path": "D:\\inseok\\ped\\data",
-        "result_folder_path": "D:\\inseok\\ped\\result"
+        "vid_folder_path": "C:\\Users\\yoon9\\data\\pandemic\\new_opposite",
+        "result_folder_path": "C:\\Users\\yoon9\\workspace\\ped_result"
     },
     "obstacles":[
         [5.15, 5.15, -8, 16],

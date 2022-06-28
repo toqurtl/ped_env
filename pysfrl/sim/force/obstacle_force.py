@@ -1,0 +1,2 @@
+class ObstacleForce(object):
+    pass

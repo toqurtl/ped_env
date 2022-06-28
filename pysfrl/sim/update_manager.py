@@ -1,5 +1,5 @@
 import numpy as np
-from dis_ped.video.parameters import DataIndex as Index
+from pysfrl.sim.parameters import DataIndex as Index
 
 
 class UpdateManager(object):

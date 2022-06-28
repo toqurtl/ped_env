@@ -2,7 +2,7 @@ from typing import List
 import numpy as np
 
 
-class EnvState(object):
+class ObstacleState(object):
     """State of the environment obstacles"""
 
     def __init__(self, obstacles, resolution=10):

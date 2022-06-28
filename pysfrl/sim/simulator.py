@@ -1,7 +1,7 @@
 # coding=utf-8
-from pysfrl.sim.envstate import EnvState
+from pysfrl.sim.obstaclestate import EnvState
 from pysfrl.sim.pedstate import PedState
-from pysfrl.sim import forces
+from pysfrl.sim.force import forces
 from pysfrl.sim.video.peds import Pedestrians
 from pysfrl.sim.update_manager import UpdateManager
 from pysfrl.sim.config.exp_setting import ExperimentSetting

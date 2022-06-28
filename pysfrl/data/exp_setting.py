@@ -1,9 +1,9 @@
 import json
 import os
 from .video_data import VideoData
-from dis_ped.video.peds import Pedestrians
-from dis_ped.config.filefinder import FileFinder
-from dis_ped.config.config import PedConfig
+from pysfrl.video.peds import Pedestrians
+from pysfrl.data.filefinder import FileFinder
+from pysfrl.config.config import PedConfig
 
 class ExperimentSetting(object):
     def __init__(self, config_path, idx):

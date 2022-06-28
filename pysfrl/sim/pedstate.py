@@ -17,15 +17,15 @@ class PedState:
         self.max_speed = 2.1
         self.initial_speeds = None
         self.current_state = None
-        self.ped_states = []
+        # self.ped_states = []
         self.group_states = []        
     
     @property
     def state(self):
         return self.current_state
 
-    def get_states(self):
-        return np.stack(self.ped_states), self.group_states
+    # def get_states(self):
+    #     return np.stack(self.ped_states), self.group_states
 
     def size(self) -> int:
         return self.state.shape[0]
