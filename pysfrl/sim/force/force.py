@@ -4,7 +4,7 @@ import numpy as np
 
 # sim: NewSimulator
 
-class Force(object):
+class Force(object):    
     @classmethod
     def desired_force(cls, sim):
         cfg = sim.cfg.force_config["desired_force"]

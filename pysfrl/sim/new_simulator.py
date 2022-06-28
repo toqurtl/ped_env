@@ -88,7 +88,8 @@ class NewSimulator(object):
         # target_phase 변경
         self.time_step += 1
         return True
-
+    
+    # 이전 whole_state -> 시뮬레이션 끝났는지 확인 -> visible state 가져옴 -> 다음 visible state -> whole state 만듦 -> 
     def step_once(self):
         # update_visible
         # states중 마지막 것 가져옴
@@ -118,18 +119,16 @@ class NewSimulator(object):
         if len(visible_state) > 0:
             # visible state들에 대해서 힘 계산해서 변경
             next_state, next_group_state = self.do_step(visible_state, visible_max_speeds, None)                         
-            # 변경된 visbile state를 whole state에 반영
-            
+            # 변경된 visbile state를 whole state에 반영            
             whole_state = UpdateManager.new_state(whole_state, next_state)
         
         # 계산안하고 등장해야 하는 애들 반영 -> whole_state
         whole_state = UpdateManager.update_new_peds(whole_state, self.time_step)                        
         
-        #finish 여부를 확인
-        
+        # finish 여부를 확인        
         whole_state = UpdateManager.update_phase(whole_state)
-        whole_state = UpdateManager.update_finished(whole_state)        
-        # print(whole_state)
+        whole_state = UpdateManager.update_finished(whole_state)
+        
         # whole_state를 pedestrians에 저장
         self.after_step(whole_state, next_group_state)
         return False        

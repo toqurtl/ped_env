@@ -1,7 +1,13 @@
 import numpy as np
+from enum import Enum
 from .parameters import DataIndex as Index
 
 index_list = sorted([index for index in Index], key=lambda data: data.index)
+
+class AgentState(Enum):
+    NONVISIBLE = 0 # non-visible, not finish
+    VISIBLE = 1 # visible, not finish
+    FINISHED = 2 # non-visible, finish
 
 
 # -1: id, -2: visible, -3: tau
@@ -14,6 +20,7 @@ class PedAgent(object):
         self.phase = 0        
         self.final_phase = ped_info["final_phase"]        
         self.goal_schedule = ped_info["goal_schedule"]
+        self.sim_state = None
         self._initialize()
 
     @property
