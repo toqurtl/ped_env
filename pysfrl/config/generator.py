@@ -1,2 +1,0 @@
-class ConfigGenerator(object):
-    pass

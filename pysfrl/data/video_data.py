@@ -1,15 +1,17 @@
 import pandas as pd
 import numpy as np
 import json
+import os
 
 
 # Case의 데이터를 다루기 위한 class
 class VideoData(object):
     # x_path: hp.csv, y_path: vp.csv
-    def __init__(self, x_path, y_path, idx):
+    def __init__(self, scene_folder):
+        x_path = os.path.join(scene_folder, "hp.csv")
+        y_path = os.path.join(scene_folder, "vp.csv")
         self.x_origin: np.ndarray = pd.read_csv(x_path).to_numpy()
-        self.y_origin: np.ndarray = pd.read_csv(y_path).to_numpy()
-        self.idx = idx
+        self.y_origin: np.ndarray = pd.read_csv(y_path).to_numpy()        
         self.origin_data = {
             "x": self.x_origin,
             "y": self.y_origin
@@ -114,6 +116,7 @@ class VideoData(object):
             states.append(state)        
         return np.array(states)
 
+    # start_time 구하는 것임
     def represent_time(self, person_idx):
         represent_idx_list = []
         x_data, y_data = self.pos_of_person(person_idx)        
@@ -147,16 +150,18 @@ class VideoData(object):
                 "start_time": start                
             }
         
-    # 현재 case 국한된 것
+    # TODO - 현재 case 국한된 것
     def num_phase(self, person_idx):
         if self.is_special_case(person_idx):
             return 2
         else:
             return 1
     
+    # TODO - 현재 case 국한된 것
     def final_phase(self, person_idx):
         return self.num_phase(person_idx) - 1
 
+    # TODO - 이 case에 한정된 함수
     def is_special_case(self, person_idx):
         px, py = self.initial_pos(person_idx)
         gx, gy = self.final_pos(person_idx)        
@@ -171,6 +176,7 @@ class VideoData(object):
         else:
             return False
 
+    # goal schedule 형태 뽑아내기 위함임
     def goal_schedule(self, person_idx):
         px, py = self.initial_pos(person_idx)
         gx, gy = self.final_pos(person_idx)
@@ -226,11 +232,11 @@ class VideoData(object):
                 }
             }
 
-    def to_json(self, file_path):        
+    def to_json(self, folder_path):  
+        file_path = os.path.join(folder_path, "basic_info.json")
         state = self.initial_state()
         data = {
-            "basic":{
-                "vid_id": self.idx,
+            "basic":{                
                 "num_person": self.num_person,
                 "gt_time": self.num_data
             },
@@ -241,7 +247,8 @@ class VideoData(object):
             json.dump(data, f, indent=4)
         return
         
-    def trajectory_to_json(self, file_path):
+    def trajectory_to_json(self, folder_path):
+        file_path = os.path.join(folder_path, "trajectory.json")
         result_data = {}        
         for time_idx, step_width in enumerate(self.time_table):
             result_data[time_idx] = {}
@@ -277,7 +284,14 @@ class VideoData(object):
             result_data[time_idx] ={
                 "step_width": step_width,
                 "states": states
-            }        
+            }
+
         with open(file_path, 'w') as f:
             json.dump(result_data, f, indent=4)
+        return
+
+    def ped_info_to_json(self, folder_path):
+        file_path = os.path.join(folder_path, "ped_info.json")
+        with open(file_path, 'w') as f:
+            json.dump(self.ped_info(), f, indent=4)
         return

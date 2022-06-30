@@ -7,6 +7,7 @@ class ObstacleState(object):
 
     def __init__(self, obstacles, resolution=10):
         self.resolution = resolution
+        self.obstacle_info = obstacles
         self.obstacles = obstacles
         self.obstacles_line = obstacles
         obstacles_min, obstacles_max = [], []

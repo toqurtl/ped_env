@@ -1,10 +1,11 @@
-from pysfrl.config.config import SimulationConfig
+from pysfrl.config.sim_config import SimulationConfig
 from pysfrl.sim.peds import Pedestrians
 from pysfrl.sim.pedstate import PedState
 from pysfrl.sim.obstaclestate import ObstacleState
 from pysfrl.sim.update_manager import UpdateManager
 from pysfrl.sim.force.force import Force
 import numpy as np
+import json
 
 repulsive_force_dict ={
     "my_force": Force.social_sfm_1,
@@ -21,7 +22,8 @@ class NewSimulator(object):
         # components: Ped, pedstate 계산기, Obstacle 계산기
         # Pedestrian 기본 정보 + 시뮬레이션동안 발생하는 정보 반환
         self.peds = Pedestrians(self.cfg.ped_info, self.cfg.initial_state_info)
-        self.ped_state = PedState(config.scene_config)
+        self.ped_state = PedState(config.scene_config)        
+        # 시뮬레이터 안에서 인식하기 위함(힘 계산을 위해)
         self.obstacle_state = ObstacleState(config.obstacles_info)
         self.repulsive_force_name = self.cfg.force_config["repulsive_force"]["name"]
 
@@ -39,13 +41,25 @@ class NewSimulator(object):
     def initial_speeds(self):
         return self.cfg.initial_speeds
     
+    # obstacle_info, [[1,2,3,4],[1,2,3,4]] 이런식으로 된 친구들
+    @property
+    def obstacle_info(self):        
+        return np.array(self.cfg.obstacles_info)
+    
+    @property
+    def peds_states(self):
+        return np.array(self.peds.states)
+    
+    def num_peds(self):
+        return self.peds.num_peds
+    
     def get_obstacles(self):
         return self.obstacle_state.obstacles
 
     def set_step_width(self):
         new_step_width = 0
         if self.time_table is None:
-            new_step_width = 0.133            
+            new_step_width = self.cfg.step_width       
         else:# time_table setting 부분 완성 후
             try: 
                 new_step_width = self.time_table[self.time_step]                
@@ -66,8 +80,7 @@ class NewSimulator(object):
 
     def simulate(self):
         while True:            
-            is_finished = self.step_once() 
-            print(self.ped_state.current_state)          
+            is_finished = self.step_once()             
             if is_finished: 
                 break
 
@@ -132,3 +145,25 @@ class NewSimulator(object):
         # whole_state를 pedestrians에 저장
         self.after_step(whole_state, next_group_state)
         return False        
+
+    def SDVR(self):
+        pass
+
+    def save(self, file_path):
+        result_data = {}        
+        time = 0
+        result_data[0] = {
+            "step_width": time,
+            "states": self.peds.states[0].tolist()
+        }
+        
+        for i in range(0, len(self.step_width_list)):
+            time += self.step_width_list[i]
+            result_data[i+1] = {
+                "step_width": time,
+                "states": self.peds.states[i+1].tolist()
+            }
+        
+        with open(file_path, 'w') as f:
+            json.dump(result_data, f, indent=4)        
+        return

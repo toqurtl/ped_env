@@ -3,44 +3,10 @@ from . import stateutils
 import numpy as np
 
 
-
 class CustomUtils(object):
-
-    @classmethod
-    def cal_dist_point_and_line(cls, point, line):
-        pass
-
     @classmethod
     def get_distance_of_state(cls, state):
         return stateutils.desired_directions(state)[1]
-
-
-    # @classmethod
-    # def get_diff_of_peds(cls, state):
-    #     diff = stateutils.vec_diff(state[:,:2])
-    #     distance = None
-    #     direction = None
-    #     for d in diff:        
-    #         a, b = stateutils.normalize(d)
-    #         if distance is None:
-    #             # direction = np.expand_dims(a, axis=0)
-    #             distance = b            
-    #             continue
-            
-    #         # direction = np.append(direction, [a], axis=0)
-    #         distance = np.vstack((distance, b))
-    #     return distance
-
-
-    # @classmethod
-    # def get_num_of_peds_with_threshold(cls, state, threshold):
-    #     distance = cls.get_diff_of_peds(state)
-    #     num_list = []
-    #     for ped_distance in distance:        
-    #         distance_mask = ped_distance < threshold
-    #         num_list.append(len(ped_distance[distance_mask])-1)
-    #     return num_list
-
 
     @classmethod
     def get_distance_matrix(cls, peds):

@@ -3,7 +3,7 @@ import os
 from .video_data import VideoData
 from pysfrl.video.peds import Pedestrians
 from pysfrl.data.filefinder import FileFinder
-from pysfrl.config.config import PedConfig
+from pysfrl.config.sim_config import PedConfig
 
 class ExperimentSetting(object):
     def __init__(self, config_path, idx):
@@ -13,6 +13,7 @@ class ExperimentSetting(object):
         self._set_experiment()
         self._save_vid_data()
 
+    # TODO - videodata input을 폴더로 변경했음. 반영해야함
     @property
     def video(self) -> VideoData:
         try:

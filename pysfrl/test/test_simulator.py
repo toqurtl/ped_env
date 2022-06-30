@@ -4,7 +4,6 @@ from pysfrl.config.sim_config import SimulationConfig
 from pysfrl.sim.new_simulator import NewSimulator
 from pysfrl.sim.result.sim_result import SimResult
 from pysfrl.data.video_data import VideoData
-from pysfrl.visualize.plots import PlotGenerator
 import numpy as np
 import json
 import os
@@ -29,8 +28,6 @@ def video_to_simulate():
     config_path = "test\\config\\simulation_config_sample.json"
     with open(config_path, "r") as f:
         default_conifg = json.load(f)
-
-
     scene_folder = "C:\\Users\\yoon9\\data\\pandemic\\new_opposite\\15"
     save_folder = "C:\\Users\\yoon9\\data\\pandemic\\new_opposite\\15"
     v = VideoData(scene_folder)
@@ -40,8 +37,5 @@ def video_to_simulate():
     sim_cfg.set_config(default_conifg)
     sim_cfg.set_ped_info(v.ped_info())
     s = NewSimulator(sim_cfg)
-    s.simulate()    
+    s.simulate()
     SimResult.sim_result_to_json(s, sim_result_path)
-    fig, ax = PlotGenerator.generate_sim_result_plot((-5,5,-10,10), s)
-    fig.save("test.png")
-    return

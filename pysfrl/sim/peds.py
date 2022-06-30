@@ -13,7 +13,7 @@ class Pedestrians(object):
     def _initialize(self, ped_info, initial_state_info):
         initial_state_arr = []            
         for key, agent_data in initial_state_info.items():            
-            info = ped_info[key]
+            info = ped_info[int(key)]
             ped = PedAgent(agent_data, info)
             self.peds[int(key)] = ped
             initial_state_arr.append(ped.current_state)        
@@ -23,7 +23,11 @@ class Pedestrians(object):
     
     @property
     def time_step(self):
-        return len(self.states) - 1    
+        return len(self.states) - 1  
+
+    @property
+    def num_peds(self):
+        return len(self.peds)  
 
     @property
     def current_state(self):
