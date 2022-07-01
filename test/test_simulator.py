@@ -45,3 +45,7 @@ def video_to_simulate():
     fig, ax = PlotGenerator.generate_sim_result_plot((-5,5,-10,10), s)
     fig.save("test.png")
     return
+
+
+if "__name__" == "__main__":
+    pass
