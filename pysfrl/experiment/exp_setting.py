@@ -1,84 +1,74 @@
+from pysfrl.config.sim_config import SimulationConfig
+from pysfrl.data.video_data import VideoData
+from pysfrl.data import utils
+from pysfrl.sim.new_simulator import NewSimulator
+from pysfrl.sim.result.sim_result import SimResult
+from pysfrl.visualize.plots import PlotGenerator
 import json
 import os
-from .video_data import VideoData
-from pysfrl.video.peds import Pedestrians
-from pysfrl.data.filefinder import FileFinder
-from pysfrl.config.sim_config import PedConfig
 
-class ExperimentSetting(object):
-    def __init__(self, config_path, idx):
-        self.cfg = PedConfig(config_path)
-        self.file_finder = FileFinder(config_path)
-        self.idx = idx
-        self._set_experiment()
-        self._save_vid_data()
 
-    # TODO - videodata input을 폴더로 변경했음. 반영해야함
-    @property
-    def video(self) -> VideoData:
-        try:
-            hp_path = self.file_finder.hp_path(self.idx)
-            vp_path = self.file_finder.vp_path(self.idx)        
-            v = VideoData(hp_path, vp_path, self.idx)
-        except FileNotFoundError:            
-            hp_path = self.file_finder.hp_path_2(self.idx)
-            vp_path = self.file_finder.vp_path_2(self.idx)        
-            v = VideoData(hp_path, vp_path, self.idx)                         
-        return v
+# Experiment 폴더 관리(만들고, State 보고 등등)
+class ExpSetting(object):
+    def __init__(self, exp_folder_path):
+        self.exp_folder_path = exp_folder_path
+
+    def scene_folder_path_list(self):
+        folder_list = []
+        for scene_path in os.listdir(self.exp_folder_path):
+            folder_list.append(os.path.join(self.exp_folder_path, scene_path))
+        return folder_list
+
+    def cfg_id_list(self):
+        return [cfg_id for cfg_id in os.listdir(self.exp_folder_path)]
         
-    @property
-    def peds(self):
-        video_info_path = self.file_finder.video_info_path(self.idx)
-        with open(video_info_path, 'r') as f:
-            json_data = json.load(f)
-        return Pedestrians(json_data)
-
-    @property
-    def obstacle(self):
-        return self.cfg.obstacles
-
-    @property
-    def simul_result_path(self):
-        return self.file_finder.simul_result_path(self.idx, self.force_idx)
-
-    @property
-    def animation_path(self):
-        return self.file_finder.animation_path(self.idx, self.force_idx)
-
-    @property
-    def plot_path(self):
-        return self.file_finder.plot_path(self.idx, self.force_idx)
-
-    @property
-    def force_config(self):
-        return self.cfg.force_config
-
-    @property
-    def scene_config(self):
-        return self.cfg.scene_config
-
-    @property
-    def simul_config(self):
-        return self.cfg.simul_config
+    def scene_folder_path(self, cfg_id):
+        return os.path.join(self.exp_folder_path, cfg_id)
     
-    def force_list(self):
-        return self.force_config["set"].keys()
+    def ground_truth_folder_path(self, cfg_id):
+        return os.path.join(self.scene_folder_path(cfg_id), "data")
 
-    def _set_experiment(self):
-        # set folder
-        result_path = self.file_finder.result_path
-        env_path = self.file_finder.env_path(self.idx) 
-        if not os.path.exists(result_path):
-            os.mkdir(result_path)
+    def compare_folder_path(self, cfg_id):
+        return os.path.join(self.scene_folder_path(cfg_id), "compare")
 
-        if not os.path.exists(env_path):
-            os.mkdir(env_path)
-
-    def _save_vid_data(self):
-        video_info_path = self.file_finder.video_info_path(self.idx)
-        gt_path = self.file_finder.gt_path(self.idx)
-        self.video.to_json(video_info_path)        
-        self.video.trajectory_to_json(gt_path)
+    def add_scene(self, sim_cfg: SimulationConfig):        
+        cfg_folder_path = self.scene_folder_path(sim_cfg.config_id)
+        sim_cfg_file_path = os.path.join(cfg_folder_path, "sim_cfg.json")
+        ground_truth_data_path = self.ground_truth_folder_path(sim_cfg.config_id)
+        # 입력한 sim_cfg의 폴더가 있는지 확인
+        if not os.path.exists(cfg_folder_path):
+            os.makedirs(cfg_folder_path)
+            os.makedirs(ground_truth_data_path)            
+        sim_cfg.save(sim_cfg_file_path)
         return
 
+    def add_scene_from_video(self, v: VideoData, cfg_id):
+        sim_config: SimulationConfig = utils.generate_config(v, cfg_id)        
+        self.add_scene(sim_config)
+        config_id = sim_config.config_id
+        utils.save_info_from_video(v, self.ground_truth_folder_path(config_id))
+        return
 
+    def simulate_scene(self, cfg_id):
+        sim_cfg = SimulationConfig()
+        folder_path = self.scene_folder_path(cfg_id)
+        sim_cfg_path = os.path.join(folder_path, "sim_cfg.json")        
+        with open(sim_cfg_path, "r") as f:
+            data = json.load(f)
+        sim_cfg.set_config(data)        
+        s = NewSimulator(sim_cfg)
+
+        success = s.simulate()
+        if success:
+            sim_result_path = os.path.join(folder_path, "sim_result.json")
+            fig_path = os.path.join(folder_path, "trajectory.png")
+            SimResult.sim_result_to_json(s, sim_result_path)
+            fig, ax = PlotGenerator.generate_sim_result_plot((-5,5,-10,10), s)    
+            fig.savefig(fig_path)
+        return success
+
+    def simulate_every_scene(self):
+        for cfg_id in self.cfg_id_list():
+            print(cfg_id)
+            success = self.simulate_scene(cfg_id)
+            print(success)

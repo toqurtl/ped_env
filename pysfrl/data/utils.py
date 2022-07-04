@@ -1,14 +1,24 @@
 from pysfrl.data.video_data import VideoData
+from pysfrl.config.sim_config import SimulationConfig
+import os
+import json
 
-
-# video 저장된 폴더 -> basic_info, ped_info, trajectory_info json으로 변경
-# ped_info -> simulation config로 변경할 때 활용
-# 
-def get_ped_info_from_video(video_folder_path):
-    v = VideoData(video_folder_path)
-    v.to_json(video_folder_path)
-    v.ped_info_to_json(video_folder_path)
-    v.trajectory_to_json(video_folder_path)
+def save_info_from_video(v: VideoData, save_path):    
+    v.to_json(save_path)
+    v.ped_info_to_json(save_path)
+    v.trajectory_to_json(save_path)
+    v.save(save_path)
     return
     
-    
+def generate_config(v: VideoData, cfg_id) -> SimulationConfig:    
+    entry_path = os.path.abspath(".")
+    default_cfg_path = os.path.join(entry_path, "pysfrl", "test", "data", "simulation_config_sample.json")
+    with open(default_cfg_path, "r") as f:
+        default_cfg = json.load(f)
+
+    sim_cfg = SimulationConfig()
+    sim_cfg.set_config(default_cfg)
+    sim_cfg.set_config_id(cfg_id)
+    sim_cfg.set_initial_state_info(v.initial_state())
+    sim_cfg.set_ped_info(v.ped_info())
+    return sim_cfg

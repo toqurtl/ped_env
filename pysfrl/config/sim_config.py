@@ -4,7 +4,8 @@ import json
 
 
 class SimulationConfig(object):
-    def __init__(self):             
+    def __init__(self):
+        self.config_id = None
         self.ped_info: Dict = {}
         self.obstacles_info: Dict = {}
         self.scene_config: Dict = {}
@@ -13,13 +14,14 @@ class SimulationConfig(object):
         self.initial_state_info: Dict = {}
         return
 
-    def set_config(self, cfg):
+    def set_config(self, cfg):        
         self.ped_info = cfg["ped_info"]
         self.obstacles_info = cfg["obstacles"]
         self.scene_config = cfg["scene"]
         self.force_config = cfg["forces"]
         self.condition = cfg["condition"]
         self.initial_state_info = cfg["initial_state"]
+        self.config_id = cfg["config_id"]
         return
 
     def set_force_config(self, force_config):
@@ -29,6 +31,13 @@ class SimulationConfig(object):
     def set_ped_info(self, ped_info):
         self.ped_info = ped_info
         return
+
+    def set_initial_state_info(self, initial_state_info):
+        self.initial_state_info = initial_state_info
+        return
+
+    def set_config_id(self, config_id):
+        self.config_id = config_id
 
     @property
     def simul_time_threshold(self):
@@ -82,9 +91,9 @@ class SimulationConfig(object):
     def repulsive_force_params(self):
         return self.force_config["repulsive_force"]["params"]
 
-    def get_config(self, config_id):
+    def get_config_dict(self):
         return {
-            "config_id": config_id,
+            "config_id": self.config_id,
             "ped_info": self.ped_info,
             "initial_state": self.initial_state_info,
             "group_info": [],
@@ -94,8 +103,8 @@ class SimulationConfig(object):
             "condition": self.condition
         }
 
-    def save(self, file_path, config_id):
-        cfg = self.get_config(config_id)
+    def save(self, file_path):
+        cfg = self.get_config_dict()        
         with open(file_path, "w") as f:
-            json.dump(cfg)
+            json.dump(cfg, f, indent=4)
         return

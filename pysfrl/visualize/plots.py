@@ -3,8 +3,12 @@ import numpy as np
 from pyparsing import col
 from pysfrl.sim.parameters import DataIndex as Index
 from pysfrl.sim.new_simulator import NewSimulator
+
+
 plt.rcParams['font.family'] = 'Times New Roman'
 plt.rcParams["animation.html"] = "jshtml"
+COLOR_LIST = ["black", "navy", "blue", "red", "darkgreen", "gray", "gold", "silver", "orange", "deeppink"]
+
 
 class PlotGenerator(object):
 
@@ -14,6 +18,13 @@ class PlotGenerator(object):
         sub_plots = PlotGenerator.plot_trajectory(sub_plots, sim.peds_states)
         sub_plots = PlotGenerator.plot_obstacles(sub_plots, sim.get_obstacles())
         return sub_plots
+
+    @staticmethod
+    def generate_sim_result_comparsion(xy_range, sim: NewSimulator, gt_path):
+        sub_plots = PlotGenerator.generate_sub_plots(xy_range)
+        sub_plots = PlotGenerator.plot_obstacles(sub_plots, sim.get_obstacles())
+        sub_plots = PlotGenerator.plot_trajectory(sub_plots, sim.peds_states)
+
 
     # plot 틀을 생성
     @staticmethod
@@ -40,11 +51,13 @@ class PlotGenerator(object):
     def plot_trajectory(sub_plots, peds_states):
         fig, ax = sub_plots
         num_peds = len(peds_states[0])
-        for ped_id in range(0, num_peds):            
+        for ped_id in range(0, num_peds):
             states = peds_states[:,ped_id]
             px, py = states[:, Index.px.index], states[:, Index.py.index]
             visible = states[:, Index.visible.index] == 1
-            ax.plot(px[visible], py[visible], "-o", markersize=0.05, color="black")
+            color = COLOR_LIST[ped_id % len(COLOR_LIST)]
+            ax.plot(px[visible], py[visible], "-o", markersize=0.05, color=color, label=ped_id)
+            ax.legend()
         return fig, ax
             
     @staticmethod

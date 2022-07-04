@@ -13,9 +13,9 @@ class Pedestrians(object):
     def _initialize(self, ped_info, initial_state_info):
         initial_state_arr = []            
         for key, agent_data in initial_state_info.items():            
-            info = ped_info[int(key)]
+            info = ped_info[key]
             ped = PedAgent(agent_data, info)
-            self.peds[int(key)] = ped
+            self.peds[key] = ped
             initial_state_arr.append(ped.current_state)        
         self.states.append(np.array(initial_state_arr))
         self.group_states.append([])

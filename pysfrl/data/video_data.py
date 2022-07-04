@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import json
 import os
+import pickle
 
 
 # Case의 데이터를 다루기 위한 class
@@ -85,7 +86,7 @@ class VideoData(object):
     def initial_state(self):
         state = {}
         for idx in range(0, self.num_person): 
-            state[idx] = self.initial_state_of_person(idx)           
+            state[str(idx)] = self.initial_state_of_person(idx)           
         return state
 
     def initial_state_of_person(self, person_idx):
@@ -231,6 +232,12 @@ class VideoData(object):
                     "ty": gy
                 }
             }
+
+    def save(self, folder_path):
+        save_path = os.path.join(folder_path, "video.vdt")
+        with open(save_path, "wb") as fw:
+            pickle.dump(self, fw)
+        return
 
     def to_json(self, folder_path):  
         file_path = os.path.join(folder_path, "basic_info.json")

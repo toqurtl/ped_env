@@ -21,6 +21,7 @@ class NewSimulator(object):
         # initialization(config 정보 바탕으로 초기정보 생성)
         # components: Ped, pedstate 계산기, Obstacle 계산기
         # Pedestrian 기본 정보 + 시뮬레이션동안 발생하는 정보 반환
+        
         self.peds = Pedestrians(self.cfg.ped_info, self.cfg.initial_state_info)
         self.ped_state = PedState(config.scene_config)        
         # 시뮬레이터 안에서 인식하기 위함(힘 계산을 위해)
@@ -79,14 +80,16 @@ class NewSimulator(object):
         return desired_force + obstacle_force + repulsive_force
 
     def simulate(self):
+        success = True
         while True:            
             is_finished = self.step_once()             
-            if is_finished: 
+            if is_finished:
                 break
 
             if self.time_step>1000:
+                success = False
                 break
-        return
+        return success
 
     def do_step(self, visible_state, visible_max_speeds, visible_group):
         self.ped_state.set_state(visible_state, visible_group, visible_max_speeds)        
@@ -143,7 +146,7 @@ class NewSimulator(object):
         whole_state = UpdateManager.update_finished(whole_state)
         
         # whole_state를 pedestrians에 저장
-        self.after_step(whole_state, next_group_state)
+        self.after_step(whole_state, next_group_state)        
         return False        
 
     def SDVR(self):

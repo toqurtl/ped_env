@@ -21,7 +21,8 @@ def sim_cfg_to_simulate():
     config_id = "test"
     cfg = SimulationConfig()
     cfg.set_config(data)
-    s = NewSimulator(cfg.get_config(config_id))
+    cfg.set_config_id(config_id)
+    s = NewSimulator(cfg)
     s.simulate()
     SimResult.sim_result_to_json(s, "test.json")
 
