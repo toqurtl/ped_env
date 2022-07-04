@@ -17,22 +17,22 @@ video_folder_path = os.path.join(onedrive_path, "연구\\pandemic\\data\\ped_tex
 
 exp = ExpSetting(exp_folder_path=exp_folder_path)
 
-scene_folder_path = exp.scene_folder_path("15")
-a = utils.gt_trajectory_to_numpy(scene_folder_path)
+for scene_folder_path in exp.scene_folder_path_list():
+    a = utils.gt_trajectory_to_numpy(scene_folder_path)
+    xy_range = (-5, 5, -10, 10)
+    sub_plots = PlotGenerator.generate_sub_plots(xy_range)
+    sub_plots = PlotGenerator.plot_trajectory(sub_plots, a)
+    fig, ax = sub_plots
+    fig_path = os.path.join(scene_folder_path, "data", "gt_trajectory.png")
+    fig.savefig(fig_path)
 
-xy_range = (-5, 5, -10, 10)
-sub_plots = PlotGenerator.generate_sub_plots(xy_range)
-sub_plots = PlotGenerator.plot_trajectory(sub_plots, a)
-
-fig, ax = sub_plots
-fig.savefig('test.png')
-
-# for vid_id in os.listdir(video_folder_path):
-#     print(vid_id)
+# for vid_id in os.listdir(video_folder_path):    
 #     vid_path = os.path.join(video_folder_path, vid_id)
 #     video_data = VideoData(scene_folder=vid_path)
 #     exp.add_scene_from_video(video_data, vid_id)    
 
-exp.simulate_scene("15")
+
+
+# exp.simulate_scene("15")
 # exp.simulate_every_scene()
 

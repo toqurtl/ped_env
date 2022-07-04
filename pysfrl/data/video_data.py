@@ -233,6 +233,38 @@ class VideoData(object):
                 }
             }
 
+    def ground_truth_state(self):        
+        for time_idx, step_width in enumerate(self.time_table):            
+            states = []
+            for ped_idx in range(0, self.num_person):
+                state = []                 
+                start, finish= self.represent_time(ped_idx)
+                px = self.x_origin[time_idx][ped_idx+1]
+                py = self.y_origin[time_idx][ped_idx+1]
+                if np.isnan(px):
+                    visible = 0
+                else:
+                    visible = 1
+                
+                if finish > time_idx:
+                    finish_value = 0
+                else:
+                    finish_value = 1
+                if visible == 1:
+                    state.append(px)
+                    state.append(py)
+                else:
+                    state.append(0)
+                    state.append(0)
+                for i in range(0, 6):
+                    state.append(0)
+                state.append(visible)
+                state.append(start)
+                state.append(ped_idx)
+                state.append(finish_value)
+                states.append(state)
+        return np.array(states)
+
     def save(self, folder_path):
         save_path = os.path.join(folder_path, "video.vdt")
         with open(save_path, "wb") as fw:
