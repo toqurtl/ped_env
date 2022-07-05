@@ -76,9 +76,6 @@ class Simulator(object):
         self.step_width_list.append(new_step_width)
         return
 
-    def check_finish(self):        
-        return np.sum(self.peds.check_finished())
-
     def compute_forces(self, external_force=None):
         desired_force = Force.desired_force(self)
         obstacle_force = Force.obstacle_force(self)
@@ -100,9 +97,23 @@ class Simulator(object):
                 break
         return success
 
+    def capped_velocity(self, desired_velocity, max_velocity):
+        desired_speeds = np.linalg.norm(desired_velocity, axis=-1)
+        factor = np.minimum(1.0, max_velocity / desired_speeds)
+        factor[desired_speeds == 0] = 0.0
+        return desired_velocity * np.expand_dims(factor, -1)
+
+
     def do_step(self, visible_state, visible_max_speeds, visible_group, external_force=None):
         self.ped_state.set_state(visible_state, visible_group, visible_max_speeds)        
-        force = self.compute_forces(external_force=external_force)        
+        force = self.compute_forces(external_force=external_force)
+        vel = visible_state[:,2:4]
+        tau = visible_state[:, 6:7]
+        desired_velocity = vel + 0.067 * force
+        desired_velocity = self.capped_velocity(desired_velocity, 2.1)
+        
+
+
         next_state, next_group_state = self.ped_state.step(force, visible_state)                
         return next_state, next_group_state
             
