@@ -2,7 +2,7 @@ from pysfrl.sim.utils import stateutils
 from pysfrl.sim.utils.custom_utils import CustomUtils
 import numpy as np
 
-# sim: NewSimulator
+# sim: Simulator
 
 class Force(object):    
     @classmethod

@@ -5,10 +5,12 @@ import os
 import json
 
 
-def generate_trajectory_fig(v: VideoData, file_path):
+def generate_trajectory_fig(v: VideoData, fig_path):
     xy_range = (-5, 5, -10, 10)
-    sub_plots = PlotGenerator.generate_sub_plots(xy_range)
+    sub_plots = PlotGenerator.generate_sub_plots(xy_range)    
     sub_plots = PlotGenerator.plot_trajectory(sub_plots, v.ground_truth_state())
+    fig, ax = sub_plots
+    fig.savefig(fig_path)
     return
 
 

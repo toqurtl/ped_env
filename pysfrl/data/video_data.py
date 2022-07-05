@@ -233,8 +233,9 @@ class VideoData(object):
                 }
             }
 
-    def ground_truth_state(self):        
-        for time_idx, step_width in enumerate(self.time_table):            
+    def ground_truth_state(self):
+        gt_state = []        
+        for time_idx, step_width in enumerate(self.time_table):             
             states = []
             for ped_idx in range(0, self.num_person):
                 state = []                 
@@ -263,7 +264,8 @@ class VideoData(object):
                 state.append(ped_idx)
                 state.append(finish_value)
                 states.append(state)
-        return np.array(states)
+            gt_state.append(states)             
+        return np.array(gt_state)
 
     def save(self, folder_path):
         save_path = os.path.join(folder_path, "video.vdt")

@@ -93,7 +93,7 @@
                 "goal_threshold": 0.2
             },
         "obstacle_force":{
-                "factor": 10.0,
+                "factor": 1.5,
                 "sigma": 0.2,
                 "threshold": 0.2
         },

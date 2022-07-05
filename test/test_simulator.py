@@ -1,7 +1,7 @@
 # from pysfrl.data.exp_setting import ExperimentSetting
 # from pysfrl.sim.simulator import Simulator
 from pysfrl.config.sim_config import SimulationConfig
-from pysfrl.sim.new_simulator import NewSimulator
+from pysfrl.sim.simulator import Simulator
 from pysfrl.sim.result.sim_result import SimResult
 from pysfrl.data.video_data import VideoData
 from pysfrl.visualize.plots import PlotGenerator
@@ -21,7 +21,7 @@ def sim_cfg_to_simulate():
     cfg = SimulationConfig()
     cfg.set_config(data)
     cfg.set_config_id = config_id
-    s = NewSimulator(cfg)
+    s = Simulator(cfg)
     s.simulate()
     SimResult.sim_result_to_json(s, "test.json")
 
@@ -40,7 +40,7 @@ def video_to_simulate():
     sim_cfg = SimulationConfig()
     sim_cfg.set_config(default_conifg)
     sim_cfg.set_ped_info(v.ped_info())
-    s = NewSimulator(sim_cfg)
+    s = Simulator(sim_cfg)
     s.simulate()    
     SimResult.sim_result_to_json(s, sim_result_path)
     fig, ax = PlotGenerator.generate_sim_result_plot((-5,5,-10,10), s)

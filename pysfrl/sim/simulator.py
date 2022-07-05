@@ -1,88 +1,122 @@
-# coding=utf-8
-from pysfrl.sim.obstaclestate import EnvState
+from pysfrl.config.sim_config import SimulationConfig
+from pysfrl.sim.peds import Pedestrians
 from pysfrl.sim.pedstate import PedState
-from pysfrl.sim.force import forces
-from pysfrl.sim.video.peds import Pedestrians
+from pysfrl.sim.obstaclestate import ObstacleState
 from pysfrl.sim.update_manager import UpdateManager
-from pysfrl.sim.config.exp_setting import ExperimentSetting
+from pysfrl.sim.force.force import Force
 import numpy as np
 import json
 
-force_dict={
-    "desired_force": forces.DesiredForce(),
-    "obstacle_force": forces.ObstacleForce(),
-    "ped_repulsive_force": forces.PedRepulsiveForce(),
-    "social_force": forces.SocialForce(),
-    "my_force": forces.Myforce(),
-    "my_force_2": forces.MyforceSecond(),
-    "my_force_3": forces.MyforceThird()
+from pysfrl.sim.utils import stateutils
+
+repulsive_force_dict ={
+    "my_force": Force.social_sfm_1,
+    "my_force_2": Force.social_sfm_2,
+    "my_force_3": Force.basic_sfm
 }
 
 
 class Simulator(object):
-    """초기값 설정"""
-    def __init__(self, exp: ExperimentSetting, groups=None):
-        # Config 읽어보는 부분        
-        self.scene_config = exp.scene_config
-        self.force_config = exp.force_config
-
-        # 시뮬레이션 전체를 관장하는 것        
-        self.pedestrians = exp.peds
+    def __init__(self, config: SimulationConfig):
+        # configuration
+        self.cfg: SimulationConfig = config
+        # initialization(config 정보 바탕으로 초기정보 생성)
+        # components: Ped, pedstate 계산기, Obstacle 계산기
+        # Pedestrian 기본 정보 + 시뮬레이션동안 발생하는 정보 반환
         
-        # PedState. 다음 스텝을 계산해주는 계산기        
-        self.peds = PedState(self.scene_config)        
-        self.env = EnvState(exp.obstacle, self.scene_config["resolution"])
-                
-        # 시뮬레이션 time 관리
-        self.time_step = 0  
-        self.time_table = exp.video.time_table
+        self.peds = Pedestrians(self.cfg.ped_info, self.cfg.initial_state_info)
+        self.ped_state = PedState(config.scene_config)        
+        # 시뮬레이터 안에서 인식하기 위함(힘 계산을 위해)
+        self.obstacle_state = ObstacleState(config.obstacles_info)
+        self.repulsive_force_name = self.cfg.force_config["repulsive_force"]["name"]
+
+        # Simulation 
+        self.time_step = 0
+        self.time_table = None
         self.step_width_list = []
-        
-        self._initialize_force()
-        self._initialize()
-        
-        return
+        pass
 
-    # 초기 속도를 설정
-    def _initialize(self):
-        speed_vecs = self.pedestrians.current_state[:,2:4]                
-        self.initial_speeds = np.array([np.linalg.norm(s) for s in speed_vecs])        
-        self.max_speeds = self.peds.max_speed_multiplier * self.initial_speeds
+    @property
+    def initial_state(self):
+        return self.cfg.initial_state_arr
 
-    # 힘 설정
-    def _initialize_force(self):
-        force_list = []
-        for force_name in self.force_config["set"].keys():
-            force_list.append(force_dict[force_name])
-        
-        group_forces = []
-        if self.scene_config["enable_group"]:
-            force_list += group_forces
-
-        for force in force_list:
-            force.init(self, self.force_config["set"])        
-        self.forces = force_list
-        return
-
+    @property
+    def max_speeds(self):
+        return self.cfg.max_speeds
+    
+    @property
+    def initial_speeds(self):
+        return self.cfg.initial_speeds
+    
+    # obstacle_info, [[1,2,3,4],[1,2,3,4]] 이런식으로 된 친구들
+    @property
+    def obstacle_info(self):        
+        return np.array(self.cfg.obstacles_info)
+    
+    @property
+    def peds_states(self):
+        return np.array(self.peds.states)
+    
+    def num_peds(self):
+        return self.peds.num_peds
+    
     def get_obstacles(self):
-        return self.env.obstacles
+        return self.obstacle_state.obstacles
 
-    """시뮬레이션 함수"""
+    def set_step_width(self):
+        new_step_width = 0
+        if self.time_table is None:
+            new_step_width = self.cfg.step_width       
+        else:# time_table setting 부분 완성 후
+            try: 
+                new_step_width = self.time_table[self.time_step]                
+            except IndexError:
+                new_step_width = 0.133            
+        self.ped_state.step_width = new_step_width
+        self.step_width_list.append(new_step_width)
+        return
+
+    def check_finish(self):        
+        return np.sum(self.peds.check_finished())
+
+    def compute_forces(self):
+        desired_force = Force.desired_force(self)
+        obstacle_force = Force.obstacle_force(self)
+        repulsive_force = repulsive_force_dict[self.repulsive_force_name](self)
+        return desired_force + obstacle_force + repulsive_force
+
     def simulate(self):
+        success = True
         while True:            
-            is_finished = self.step_once()            
-            if is_finished: 
+            is_finished = self.step_once()             
+            if is_finished:
                 break
 
             if self.time_step>1000:
+                success = False
                 break
-        return
+        return success
 
+    def do_step(self, visible_state, visible_max_speeds, visible_group):
+        self.ped_state.set_state(visible_state, visible_group, visible_max_speeds)        
+        force = self.compute_forces()        
+        next_state, next_group_state = self.ped_state.step(force, visible_state)                
+        return next_state, next_group_state
+            
+    def after_step(self, next_state, next_group_state):
+        # Pedestrian에 결과를 업데이트
+        self.peds.update(next_state, next_group_state, self.time_step)        
+        self.peds.update_target_pos()
+        # target_phase 변경
+        self.time_step += 1
+        return True
+    
+    # 이전 whole_state -> 시뮬레이션 끝났는지 확인 -> visible state 가져옴 -> 다음 visible state -> whole state 만듦 -> 
     def step_once(self):
         # update_visible
         # states중 마지막 것 가져옴
         
-        whole_state = self.pedestrians.current_state.copy()
+        whole_state = self.peds.current_state.copy()
         
         # whole_state = UpdateManager.update_finished(whole_state)
         
@@ -107,93 +141,38 @@ class Simulator(object):
         if len(visible_state) > 0:
             # visible state들에 대해서 힘 계산해서 변경
             next_state, next_group_state = self.do_step(visible_state, visible_max_speeds, None)                         
-            # 변경된 visbile state를 whole state에 반영
-            
+            # 변경된 visbile state를 whole state에 반영            
             whole_state = UpdateManager.new_state(whole_state, next_state)
         
         # 계산안하고 등장해야 하는 애들 반영 -> whole_state
         whole_state = UpdateManager.update_new_peds(whole_state, self.time_step)                        
         
-        #finish 여부를 확인
-        
+        # finish 여부를 확인        
         whole_state = UpdateManager.update_phase(whole_state)
         whole_state = UpdateManager.update_finished(whole_state)        
-        # print(whole_state)
         # whole_state를 pedestrians에 저장
-        self.after_step(whole_state, next_group_state)
+        self.after_step(whole_state, next_group_state)        
         return False        
 
-    def before_step(self):
+    def reset(self):
         return
 
-    # 힘을 계산하고, 힘에 의한 위치 변화 및 속도 변화를 다음 state로 결과를 만듦
-    # visible state + force -> new_state
-    def do_step(self, visible_state, visible_max_speeds, visible_group=None):        
-        # 계산기 설정
-        self.peds.set_state(visible_state, visible_group, visible_max_speeds)        
-        force = self.compute_forces()        
-        next_state, next_group_state = self.peds.step(force, visible_state)                
-        return next_state, next_group_state
-
-    def after_step(self, next_state, next_group_state):
-        # Pedestrian에 결과를 업데이트
-        self.pedestrians.update(next_state, next_group_state, self.time_step)        
-        self.pedestrians.update_target_pos()
-        # target_phase 변경
-        self.time_step += 1
-        return True
-
-    def check_finish(self):        
-        return np.sum(self.pedestrians.check_finished())
-
-    def set_step_width(self):
-        new_step_width = 0
-        if self.time_table is None:
-            new_step_width = 0.133            
-        else:
-            try: 
-                new_step_width = self.time_table[self.time_step]                
-            except IndexError:
-                new_step_width = 0.133            
-        self.peds.step_width = new_step_width
-        self.step_width_list.append(new_step_width)
-        return
-
-    def compute_forces(self):        
-        return sum(map(lambda x: x.get_force(), self.forces))
-
-    """결과값 저장"""
-    def result_to_json(self, file_path):
+    def save(self, file_path):
         result_data = {}        
         time = 0
         result_data[0] = {
             "step_width": time,
-            "states": self.pedestrians.states[0].tolist()
+            "states": self.peds.states[0].tolist()
         }
         
         for i in range(0, len(self.step_width_list)):
             time += self.step_width_list[i]
             result_data[i+1] = {
                 "step_width": time,
-                "states": self.pedestrians.states[i+1].tolist()
+                "states": self.peds.states[i+1].tolist()
             }
         
         with open(file_path, 'w') as f:
             json.dump(result_data, f, indent=4)        
         return
-
-    def summary_to_json(self, file_path, success):
-        data = {}
-        data["success"] = success
-        
-        with open(file_path, 'w') as f:
-            json.dump(data, f, indent=4)
-        return
-
-        
-        
-        
-
-        
-    
 

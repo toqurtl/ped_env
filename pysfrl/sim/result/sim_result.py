@@ -1,10 +1,10 @@
-from pysfrl.sim.new_simulator import NewSimulator
+from pysfrl.sim.simulator import Simulator
 import json
 
 
 class SimResult(object):
     @staticmethod
-    def sim_result_to_json(sim: NewSimulator, file_path):    
+    def sim_result_to_json(sim: Simulator, file_path):    
         result_data = {}        
         time = 0
         result_data[0] = {
@@ -24,11 +24,15 @@ class SimResult(object):
         return
 
     @staticmethod
-    def summary_to_json(sim: NewSimulator, file_path, success):
+    def summary_to_json(sim: Simulator, file_path, success):
         data = {}
         data["success"] = success
         
         with open(file_path, 'w') as f:
             json.dump(data, f, indent=4)
         return
+
+    @staticmethod
+    def result_info_to_json(sim: Simulator, file_path):
+        pass
     

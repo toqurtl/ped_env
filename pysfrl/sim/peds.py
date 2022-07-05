@@ -39,7 +39,7 @@ class Pedestrians(object):
     def update(self, new_peds_state, next_group_state, time_step):
         new_state_list = []
         for ped in self.peds.values():
-            new_state = ped.update(new_peds_state)            
+            new_state = ped.update(new_peds_state)          
             new_state_list.append(new_state)                        
         if next_group_state is None:
             self.group_states.append([])
@@ -63,4 +63,7 @@ class Pedestrians(object):
         gx_array, gy_array = self.target_pos()        
         self.current_state[:, Index.gx.index] = gx_array
         self.current_state[:, Index.gy.index] = gy_array
+        return
+
+    def reset(self):
         return

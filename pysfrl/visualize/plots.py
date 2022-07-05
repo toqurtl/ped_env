@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from pyparsing import col
 from pysfrl.sim.parameters import DataIndex as Index
-from pysfrl.sim.new_simulator import NewSimulator
+from pysfrl.sim.simulator import Simulator
 
 
 plt.rcParams['font.family'] = 'Times New Roman'
@@ -13,14 +13,14 @@ COLOR_LIST = ["black", "navy", "blue", "red", "darkgreen", "gray", "gold", "silv
 class PlotGenerator(object):
 
     @staticmethod
-    def generate_sim_result_plot(xy_range, sim: NewSimulator):
+    def generate_sim_result_plot(xy_range, sim: Simulator):
         sub_plots = PlotGenerator.generate_sub_plots(xy_range)
         sub_plots = PlotGenerator.plot_trajectory(sub_plots, sim.peds_states)
         sub_plots = PlotGenerator.plot_obstacles(sub_plots, sim.get_obstacles())
         return sub_plots
 
     @staticmethod
-    def generate_sim_result_comparsion(xy_range, sim: NewSimulator, gt_path):
+    def generate_sim_result_comparsion(xy_range, sim: Simulator, gt_path):
         sub_plots = PlotGenerator.generate_sub_plots(xy_range)
         sub_plots = PlotGenerator.plot_obstacles(sub_plots, sim.get_obstacles())
         sub_plots = PlotGenerator.plot_trajectory(sub_plots, sim.peds_states)
@@ -52,7 +52,7 @@ class PlotGenerator(object):
         fig, ax = sub_plots
         num_peds = len(peds_states[0])
         for ped_id in range(0, num_peds):
-            states = peds_states[:,ped_id]
+            states = peds_states[:,ped_id]            
             px, py = states[:, Index.px.index], states[:, Index.py.index]
             visible = states[:, Index.visible.index] == 1
             color = COLOR_LIST[ped_id % len(COLOR_LIST)]
