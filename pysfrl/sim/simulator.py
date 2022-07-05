@@ -55,7 +55,7 @@ class Simulator(object):
     
     @property
     def peds_states(self):
-        return np.array(self.peds.states)
+        return np.array(self.peds.states)    
     
     def num_peds(self):
         return self.peds.num_peds
@@ -79,10 +79,13 @@ class Simulator(object):
     def check_finish(self):        
         return np.sum(self.peds.check_finished())
 
-    def compute_forces(self):
+    def compute_forces(self, external_force=None):
         desired_force = Force.desired_force(self)
         obstacle_force = Force.obstacle_force(self)
-        repulsive_force = repulsive_force_dict[self.repulsive_force_name](self)
+        if external_force is None:
+            repulsive_force = repulsive_force_dict[self.repulsive_force_name](self)
+        else:
+            repulsive_force = external_force
         return desired_force + obstacle_force + repulsive_force
 
     def simulate(self):
@@ -97,9 +100,9 @@ class Simulator(object):
                 break
         return success
 
-    def do_step(self, visible_state, visible_max_speeds, visible_group):
+    def do_step(self, visible_state, visible_max_speeds, visible_group, external_force=None):
         self.ped_state.set_state(visible_state, visible_group, visible_max_speeds)        
-        force = self.compute_forces()        
+        force = self.compute_forces(external_force=external_force)        
         next_state, next_group_state = self.ped_state.step(force, visible_state)                
         return next_state, next_group_state
             
@@ -111,45 +114,48 @@ class Simulator(object):
         self.time_step += 1
         return True
     
-    # 이전 whole_state -> 시뮬레이션 끝났는지 확인 -> visible state 가져옴 -> 다음 visible state -> whole state 만듦 -> 
-    def step_once(self):
-        # update_visible
-        # states중 마지막 것 가져옴
-        
-        whole_state = self.peds.current_state.copy()
-        
-        # whole_state = UpdateManager.update_finished(whole_state)
-        
-        # 모든 agent가 끝나면 종료
-        # if self.check_finish():
-        if UpdateManager.simul_finished(whole_state):
-            return True
-        # goal schedule을 확인해서 update
-        
-        # finish 여부에 따라 visible한 agent들의 state 가져옴
+    def get_visible_states(self, whole_state):        
         visible_state = UpdateManager.get_visible(whole_state)
-        # finish 여부에 따라 visible한 agent를의 idx를 가져옴
         visible_idx = UpdateManager.get_visible_idx(whole_state)
         visible_max_speeds = self.max_speeds[visible_idx]
+        return visible_state, visible_idx, visible_max_speeds
+
+    def step_once(self, external_force=None):        
+        whole_state = self.peds.current_state.copy()        
+        # 시뮬레이션 종료 여부 판단(모든 agent 끝났을 때)
+        if UpdateManager.simul_finished(whole_state):
+            return True
+        
+        # 힘 계산에 필요한 visible한 agent들의 state, idx 가져옴
+        visible_state = UpdateManager.get_visible(whole_state)
+        visible_idx = UpdateManager.get_visible_idx(whole_state)
+        visible_max_speeds = self.max_speeds[visible_idx]        
         
         # step_width update
         self.set_step_width()
 
         # group 행동할 때 설정
         next_group_state = None
+
         # 힘 계산 수행해서 다음 state를 얻어냄
         if len(visible_state) > 0:
             # visible state들에 대해서 힘 계산해서 변경
-            next_state, next_group_state = self.do_step(visible_state, visible_max_speeds, None)                         
+            next_state, next_group_state = self.do_step(
+                visible_state, 
+                visible_max_speeds, 
+                next_group_state, 
+                external_force=None
+            )
             # 변경된 visbile state를 whole state에 반영            
             whole_state = UpdateManager.new_state(whole_state, next_state)
         
-        # 계산안하고 등장해야 하는 애들 반영 -> whole_state
-        whole_state = UpdateManager.update_new_peds(whole_state, self.time_step)                        
-        
-        # finish 여부를 확인        
+        ## 위치 계산 이후 state들을 변경(visible/phase/finished)
+        # start_time 된 친구들 visible 변경
+        whole_state = UpdateManager.update_new_peds(whole_state, self.time_step)
+        # phase update
         whole_state = UpdateManager.update_phase(whole_state)
-        whole_state = UpdateManager.update_finished(whole_state)        
+        # finished
+        whole_state = UpdateManager.update_finished(whole_state)
         # whole_state를 pedestrians에 저장
         self.after_step(whole_state, next_group_state)        
         return False        

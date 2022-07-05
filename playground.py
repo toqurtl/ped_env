@@ -26,12 +26,12 @@ exp = ExpSetting(exp_folder_path=exp_folder_path)
 #     fig_path = os.path.join(scene_folder_path, "data", "gt_trajectory.png")
 #     fig.savefig(fig_path)
 
-for vid_id in os.listdir(video_folder_path):
-    print(vid_id)
-    vid_path = os.path.join(video_folder_path, vid_id)
-    video_data = VideoData(scene_folder=vid_path)
-    exp.add_scene_from_video(video_data, vid_id)    
+# for vid_id in os.listdir(video_folder_path):
+#     print(vid_id)
+#     vid_path = os.path.join(video_folder_path, vid_id)
+#     video_data = VideoData(scene_folder=vid_path)
+#     exp.add_scene_from_video(video_data, vid_id)    
 
 
-# exp.simulate_every_scene()
+exp.simulate_scene("118")
 
