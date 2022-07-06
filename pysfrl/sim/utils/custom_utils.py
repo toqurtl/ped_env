@@ -84,7 +84,7 @@ class CustomUtils(object):
         distance_vec_mat = stateutils.vec_diff(state)[idx]
         distance_mat = stateutils.distance_matrix(state)[idx]
         sort_idx = np.argsort(np.argsort(distance_mat))
-        # 가장 가까운 사람의 상대위치벡터, 상대속도벡터
+        # 가장 가까운 사람의 상대위치벡터, 상대속도벡터        
         neigbor_info = distance_vec_mat[sort_idx==1][idx][:4]
         return neigbor_info
 

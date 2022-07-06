@@ -2,6 +2,7 @@ import gym
 from gym import spaces
 from pysfrl.rl.utils import neighbor_distance
 from pysfrl.sim.simulator import Simulator
+from pysfrl.sim.parameters import DataIndex as Index
 import numpy as np
 
 from pysfrl.sim.utils.custom_utils import CustomUtils
@@ -29,13 +30,20 @@ class PysfrlEnv(gym.Env):
     def num_ped(self):
         return self.simulator.num_peds()
 
-    def step(self, action):
-        
-        while True:            
+    def is_finished(self):
+        return self.simulator.current_state[self.learned_idx, Index.finished.index] == 1        
+
+    def step(self, action):        
+        while True:      
             _, visible_idx = self.simulator.get_visible_info()
             if not self.learned_idx in visible_idx:
-                self.simulator.step_once()
+                self.simulator.step_once()                
+            elif len(visible_idx) < 2:
+                self.simulator.step_once()                 
             else:
+                break
+            if self.simulator.time_step > 10000:
+                print("inifitie")
                 break
         
         visible_state, _ = self.simulator.get_visible_info()
@@ -46,9 +54,8 @@ class PysfrlEnv(gym.Env):
         self.simulator.peds.update(next_state)
         self.simulator.time_step += 1        
         obs = self.observation(self.simulator, visible_state)
-        reward = self.reward(pre_state, next_state, visible_state)
-        done = self.simulator.check_finished()
-        
+        reward = self.reward(self.simulator, pre_state, next_state, visible_state)
+        done = self.is_finished() or self.simulator.time_step > 1000
         return obs, reward, done, self.info()
     
     def observation(self, sim: Simulator, visible_state):        

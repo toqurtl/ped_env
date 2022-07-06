@@ -1,5 +1,5 @@
 # test
-
+tensorboard/
 # cache
 __pycache__
 *.log

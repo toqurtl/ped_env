@@ -10,6 +10,7 @@ from pysfrl.experiment import utils
 import numpy as np
 
 from pysfrl.rl.env import PysfrlEnv
+from stable_baselines3 import PPO
 import os
 import json
 
@@ -43,10 +44,15 @@ simulator = exp.get_simulator("118")
 
 env = PysfrlEnv(simulator, 0)
 
-env.reset()
+model = PPO("MlpPolicy", env, verbose=1, tensorboard_log="./tensorboard/")
+model.learn(total_timesteps=1000, tb_log_name="first_run")
+
 action = np.array([1,-1])
 
-env.step(action)
+while True:
+    obs, reward, done, info = env.step(action)
+    if done:
+        break
 
 
 

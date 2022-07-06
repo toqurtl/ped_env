@@ -84,7 +84,7 @@ class Simulator(object):
         return UpdateManager.simul_finished(self.current_state)
 
     def step_once(self, external_force=None):
-        print("chekc")
+        
         # 시뮬레이션 종료 여부 판단(모든 agent 끝났을 때)
         if self.check_finished():
             return True
