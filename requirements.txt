@@ -18,3 +18,4 @@ matplotlib
 tensorboard
 torch
 gym
+stable-baselines3

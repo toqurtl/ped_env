@@ -6,6 +6,10 @@ from pysfrl.sim.simulator import Simulator
 from pysfrl.sim.utils.sim_result import SimResult
 from pysfrl.visualize.plots import PlotGenerator
 from pysfrl.experiment import utils
+
+import numpy as np
+
+from pysfrl.rl.env import PysfrlEnv
 import os
 import json
 
@@ -34,4 +38,15 @@ exp = ExpSetting(exp_folder_path=exp_folder_path)
 
 
 exp.simulate_scene("118")
+simulator = exp.get_simulator("118")
+
+
+env = PysfrlEnv(simulator, 0)
+
+env.reset()
+action = np.array([1,-1])
+
+env.step(action)
+
+
 

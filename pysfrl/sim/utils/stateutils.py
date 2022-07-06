@@ -118,3 +118,13 @@ def minmax(vecs: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.nda
     y_max = np.max(vecs[:, 1])
     return (x_min, y_min, x_max, y_max)
 
+# 거리(스칼라)
+def distance_matrix(state):
+    diff_list = vec_diff(state[:, :2])    
+    person_list = []
+    for person_diff in diff_list:
+        detail_list = []
+        for a in person_diff:
+            detail_list.append(np.linalg.norm(a))
+        person_list.append(detail_list)
+    return np.array(person_list)

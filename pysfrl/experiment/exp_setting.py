@@ -67,6 +67,16 @@ class ExpSetting(object):
         fig.savefig(fig_path)
         return success
 
+    def get_simulator(self, cfg_id):
+        sim_cfg = SimulationConfig()
+        folder_path = self.scene_folder_path(cfg_id)
+        sim_cfg_path = os.path.join(folder_path, "sim_cfg.json")        
+        with open(sim_cfg_path, "r") as f:
+            data = json.load(f)
+        sim_cfg.set_config(data)        
+        return Simulator(sim_cfg)
+
+
     def simulate_every_scene(self):
         for cfg_id in self.cfg_id_list():            
             success = self.simulate_scene(cfg_id)

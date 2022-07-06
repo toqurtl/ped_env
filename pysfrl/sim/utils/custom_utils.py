@@ -69,3 +69,33 @@ class CustomUtils(object):
     @classmethod
     def max_speeds(cls, num_peds, max_speed):
         return np.ones((num_peds)) * max_speed
+
+    # 목적지와 가까워졌는지 여부
+    @classmethod
+    def goal_distance_delta(cls, pre_state, next_state, idx):
+        pre_distance = np.linalg.norm(pre_state[idx, 0:2] - pre_state[idx, 4:6])
+        next_distance = np.linalg.norm(next_state[idx, 0:2] - next_state[idx, 4:6])
+        return pre_distance - next_distance
+
+    # 가장 가까운 사람과의 거리
+    @classmethod
+    def neighbor_info(cls, state, idx):        
+        # 사람이 혼자일 때 처리
+        distance_vec_mat = stateutils.vec_diff(state)[idx]
+        distance_mat = stateutils.distance_matrix(state)[idx]
+        sort_idx = np.argsort(np.argsort(distance_mat))
+        # 가장 가까운 사람의 상대위치벡터, 상대속도벡터
+        neigbor_info = distance_vec_mat[sort_idx==1][idx][:4]
+        return neigbor_info
+
+    @classmethod
+    def next_state(cls, state, force, max_speed=2.0, step_width=0.067):
+        vel = state[:,2:4]
+        desired_velocity = vel + step_width * force
+        max_speeds = CustomUtils.max_speeds(len(state), max_speed)
+        desired_velocity = CustomUtils.capped_velocity(desired_velocity, max_speeds)
+        state[:, 0:2] += desired_velocity * step_width
+        state[:, 2:4] = desired_velocity
+        return state[:, 0:2], state[:, 2:4]
+
+    

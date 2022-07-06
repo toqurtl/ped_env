@@ -79,58 +79,69 @@ class Simulator(object):
                 success = False
                 break
         return success
-    
-    def step_once(self, external_force=None):        
+
+    def check_finished(self):
+        return UpdateManager.simul_finished(self.current_state)
+
+    def step_once(self, external_force=None):
+        print("chekc")
         # 시뮬레이션 종료 여부 판단(모든 agent 끝났을 때)
-        if UpdateManager.simul_finished(self.current_state):
+        if self.check_finished():
             return True
-        
+
         whole_state = self.current_state.copy()
+        whole_state = self.next_state(whole_state, external_force)
+        whole_state = self.update_new_state(whole_state)  
+        
+        self.peds.update(whole_state)
+        self.time_step += 1
+        return False
+
+    # 포지션 변한 것들 반영
+    def next_state(self, whole_state, external_force=None):        
         # 힘 계산에 필요한 visible한 agent들의 state, idx 가져옴
         visible_state, visible_idx = self.get_visible_info()
-
         # 힘 계산 수행해서 다음 state를 얻어냄
         if len(visible_state) > 0:
             # visible state들에 대해서 힘 계산해서 변경
-            next_state = self.do_step(visible_state, external_force)
+            # next_state = self.do_step(visible_state, external_force)
+
+            vel = visible_state[:,2:4]
+            force = self.compute_forces(visible_state, external_force=external_force)        
+
+            desired_velocity = vel + self.step_width * force
+            visible_max_speeds = CustomUtils.max_speeds(len(visible_state), self.cfg.max_speed)
+            desired_velocity = CustomUtils.capped_velocity(desired_velocity, visible_max_speeds)
+            
+            visible_state[:, 0:2] += desired_velocity * self.step_width
+            visible_state[:, 2:4] = desired_velocity
             # 변경된 visbile state를 whole state에 반영            
-            whole_state = UpdateManager.new_state(whole_state, next_state)
+            whole_state = UpdateManager.new_state(whole_state, visible_state)
         
-        ## 위치 계산 이후 visible/phase/finished
+        return whole_state
+    
+    ## 위치 계산 이후 visible/phase/finished
+    def update_new_state(self, whole_state):        
         # start_time 된 친구들 visible 변경
         whole_state = UpdateManager.update_new_peds(whole_state, self.time_step)
         # phase update
         whole_state = UpdateManager.update_phase(whole_state)
         # finished
         whole_state = UpdateManager.update_finished(whole_state)
+        return whole_state
 
-        # whole_state를 pedestrians에 저장        
-        self.peds.update(whole_state)
-        self.time_step += 1
-        return False        
-
-    def do_step(self, visible_state, external_force=None):
-        vel = visible_state[:,2:4]
-        force = self.compute_forces(visible_state, external_force=external_force)        
-
-        desired_velocity = vel + self.step_width * force
-        visible_max_speeds = CustomUtils.max_speeds(len(visible_state), self.cfg.max_speed)
-        desired_velocity = CustomUtils.capped_velocity(desired_velocity, visible_max_speeds)
-        
-        visible_state[:, 0:2] += desired_velocity * STEP_WIDTH  
-        visible_state[:, 2:4] = desired_velocity
- 
-        return visible_state
-
-    def compute_forces(self, visible_state, external_force=None):        
+    def extra_forces(self, visible_state):
         desired_force = Force.desired_force(self.cfg, visible_state)
         obstacle_force = Force.obstacle_force(self.cfg, visible_state, self.get_obstacles())
+        return desired_force + obstacle_force
+
+    def compute_forces(self, visible_state, external_force=None):        
         if external_force is None:
             repulsive_force = repulsive_force_dict[self.repulsive_force_name](self.cfg, visible_state)
         else:
             repulsive_force = external_force
-        return desired_force + obstacle_force + repulsive_force
-    
+        return self.extra_forces(visible_state) + repulsive_force
+
     def reset(self):
         self.peds.reset()
         self.time_step = 0
