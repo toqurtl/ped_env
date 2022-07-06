@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class DataIndex(Enum):
     px = ("px", 0)
     py = ("py", 1)

@@ -1,6 +1,6 @@
 import numpy as np
 from enum import Enum
-from .parameters import DataIndex as Index
+from pysfrl.sim.parameters import DataIndex as Index
 
 index_list = sorted([index for index in Index], key=lambda data: data.index)
 
@@ -34,20 +34,14 @@ class PedAgent(object):
         self.phase = 0
         state = [self.base_data.get(index.str_name) for index in index_list]        
         self.states.append(np.array(state))
-        
         return
 
     def basic_state(self):
         return np.array([[self.base_data.get(index.str_name) for index in index_list]])
-
-    """ state 검색"""
-    def state_at(self, time_step):
-        return self.states[time_step]
     
     """ state 추가"""
     def update(self, new_whole_state):           
-        new_state = new_whole_state[self.id]       
-        new_state = np.squeeze(new_state)
+        new_state = np.squeeze(new_whole_state[self.id])        
         self.states.append(new_state)
         return new_state
 

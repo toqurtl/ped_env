@@ -2,7 +2,7 @@ from pysfrl.config.sim_config import SimulationConfig
 from pysfrl.data.video_data import VideoData
 from pysfrl.data import utils
 from pysfrl.sim.simulator import Simulator
-from pysfrl.sim.result.sim_result import SimResult
+from pysfrl.sim.utils.sim_result import SimResult
 from pysfrl.visualize.plots import PlotGenerator
 import json
 import os

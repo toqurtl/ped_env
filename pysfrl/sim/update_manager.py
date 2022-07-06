@@ -1,6 +1,5 @@
-import numpy as np
 from pysfrl.sim.parameters import DataIndex as Index
-
+import numpy as np
 
 class UpdateManager(object):
     # check functions
@@ -59,7 +58,7 @@ class UpdateManager(object):
         return state
 
     @classmethod
-    def update_new_peds(cls, state:np.ndarray, time_step):
+    def update_new_peds(cls, state: np.ndarray, time_step):
         for idx, data in enumerate(state):
             if data[Index.id.index] in cls.start_idx(state, time_step):
                 state[idx][Index.visible.index] = 1
@@ -67,7 +66,7 @@ class UpdateManager(object):
 
     # 업데이트된 visible state를 whole state에 반영
     @classmethod
-    def new_state(cls, whole_state, next_state):
+    def new_state(cls, whole_state: np.ndarray, next_state: np.ndarray):
         id_index = next_state[:, Index.id.index].astype(np.int64)        
         whole_state[id_index] = next_state
         return whole_state
@@ -85,12 +84,8 @@ class UpdateManager(object):
     # result_functions
     @classmethod
     def get_visible(cls, state: np.ndarray):
-        return state[state[:, Index.visible.index] == 1]
-
-    @classmethod
-    def get_visible_idx(cls, state: np.ndarray):
-        visible_peds = cls.get_visible(state)
-        return visible_peds[:, Index.id.index].astype(np.int64)
+        visible_state = state[state[:, Index.visible.index] == 1]
+        return visible_state, visible_state[:, Index.id.index].astype(np.int64)
 
     @classmethod
     def update_target(cls, state:np.ndarray):

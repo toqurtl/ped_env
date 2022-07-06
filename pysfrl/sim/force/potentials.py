@@ -1,7 +1,5 @@
 """Interaction potentials."""
-
 import numpy as np
-
 from pysfrl.sim.utils import stateutils
 
 

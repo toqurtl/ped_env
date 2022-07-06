@@ -1,19 +1,16 @@
 from typing import Dict, List
-import numpy as np
-
-from pysfrl.sim.utils import stateutils
 from pysfrl.sim.update_manager import UpdateManager
 from pysfrl.config.sim_config import SimulationConfig
-from .ped import PedAgent
-from .parameters import DataIndex as Index
+from pysfrl.sim.components.ped import PedAgent
+from pysfrl.sim.parameters import DataIndex as Index
+import numpy as np
 
 
 class Pedestrians(object):
     def __init__(self, cfg: SimulationConfig):
         self.cfg = cfg
         self.peds: Dict[int, PedAgent] = {}
-        self.states: List[np.ndarray] = []
-        self.group_states = []
+        self.states: List[np.ndarray] = []        
         self.generate_ped_agents()
         self.reset()
         return
@@ -26,8 +23,7 @@ class Pedestrians(object):
         return
 
     def reset(self):        
-        self.states.clear()
-        self.group_states.clear()
+        self.states.clear()        
         for ped in self.peds.values():
             ped.reset()
 
@@ -53,44 +49,18 @@ class Pedestrians(object):
 
     def visible_info(self):
         whole_state = self.current_state.copy()
-        visible_state = UpdateManager.get_visible(whole_state)
-        visible_idx = UpdateManager.get_visible_idx(whole_state)
-        visible_max_speeds = self.max_speeds[visible_idx]
-        return visible_state, visible_idx, visible_max_speeds
+        visible_state, visible_idx = UpdateManager.get_visible(whole_state)                
+        return visible_state, visible_idx
 
-    # def pos(self):
-    #     return self.current_state[:, 0:2]
-    
-    # def vel(self):
-    #     return self.current_state[:, 2:4]
-    
-    # def goal(self):
-    #     return self.current_state[:, 4:6]
-
-    # def size(self):
-    #     return self.current_state.shape[0]
-
-    # def speeds(self):
-    #     return stateutils.speeds(self.current_state)
-
-    def state_at(self, time_step):
-        return self.states[time_step]
-
-    def update(self, new_peds_state, next_group_state, time_step):
+    def update(self, new_peds_state, next_group_state=None):
         new_state_list = []
         for ped in self.peds.values():
             new_state = ped.update(new_peds_state)          
-            new_state_list.append(new_state)                        
-        if next_group_state is None:
-            self.group_states.append([])
-        else:    
-            self.group_states.append(next_group_state)
-        self.states.append(np.array(new_state_list))            
+            new_state_list.append(new_state)
+        
+        self.states.append(np.array(new_state_list))  
+        self.update_target_pos()          
         return
-
-    def check_finished(self):
-        finish_state = self.current_state[:, Index.finished.index]    
-        return np.sum(finish_state) == len(self.peds)
 
     def target_pos(self):
         gx_list, gy_list = [], []

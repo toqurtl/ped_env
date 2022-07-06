@@ -1,7 +1,6 @@
 """Field of view computation."""
-
 import numpy as np
-from .utils import stateutils
+
 
 class FieldOfView(object):
     """Compute field of view prefactors.

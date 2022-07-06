@@ -3,7 +3,7 @@ from pysfrl.experiment.exp_setting import ExpSetting
 from pysfrl.data.video_data import VideoData
 from pysfrl.config.sim_config import SimulationConfig
 from pysfrl.sim.simulator import Simulator
-from pysfrl.sim.result.sim_result import SimResult
+from pysfrl.sim.utils.sim_result import SimResult
 from pysfrl.visualize.plots import PlotGenerator
 from pysfrl.experiment import utils
 import os
