@@ -13,20 +13,28 @@ class Pedestrians(object):
         self.cfg = cfg
         self.peds: Dict[int, PedAgent] = {}
         self.states: List[np.ndarray] = []
-        self.group_states = []        
-        self._initialize(cfg.ped_info, cfg.initial_state_info)
-    
-    def _initialize(self, ped_info, initial_state_info):
-        initial_state_arr = []            
-        for key, agent_data in initial_state_info.items():            
-            info = ped_info[key]
-            ped = PedAgent(agent_data, info)
-            self.peds[key] = ped
-            initial_state_arr.append(ped.current_state)        
-        self.states.append(np.array(initial_state_arr))
-        self.group_states.append([])
+        self.group_states = []
+        self.generate_ped_agents()
+        self.reset()
         return
     
+    def generate_ped_agents(self):
+        for key, agent_data in self.cfg.initial_state_info.items():            
+            info = self.cfg.ped_info[key]
+            ped = PedAgent(agent_data, info)
+            self.peds[key] = ped
+        return
+
+    def reset(self):        
+        self.states.clear()
+        self.group_states.clear()
+        for ped in self.peds.values():
+            ped.reset()
+
+        initial_state_arr = [ped.current_state for ped in self.peds.values()]       
+        self.states.append(np.array(initial_state_arr))        
+        return
+
     @property
     def time_step(self):
         return len(self.states) - 1  
@@ -95,7 +103,4 @@ class Pedestrians(object):
         gx_array, gy_array = self.target_pos()        
         self.current_state[:, Index.gx.index] = gx_array
         self.current_state[:, Index.gy.index] = gy_array
-        return
-
-    def reset(self):
         return

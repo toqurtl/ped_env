@@ -13,15 +13,17 @@ class AgentState(Enum):
 # -1: id, -2: visible, -3: tau
 class PedAgent(object):
     def __init__(self, base_data, ped_info):
+        # cfg
         self.base_data = base_data
+        # property
         self.id = base_data.get(Index.id.str_name)
         self.start_time = base_data.get(Index.start_time.str_name)
-        self.states = []
-        self.phase = 0        
         self.final_phase = ped_info["final_phase"]        
         self.goal_schedule = ped_info["goal_schedule"]
-        self.sim_state = None
-        self.reset()
+        # variable
+        self.states = []
+        self.phase = 0                
+        return
 
     @property
     def current_state(self):
@@ -29,8 +31,10 @@ class PedAgent(object):
 
     def reset(self):
         self.states.clear()
+        self.phase = 0
         state = [self.base_data.get(index.str_name) for index in index_list]        
         self.states.append(np.array(state))
+        
         return
 
     def basic_state(self):

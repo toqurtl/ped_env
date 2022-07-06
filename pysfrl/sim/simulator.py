@@ -22,11 +22,9 @@ class Simulator(object):
         # configuration
         self.cfg: SimulationConfig = config
         # initialization(config 정보 바탕으로 초기정보 생성)
-        # components: Ped, pedstate 계산기, Obstacle 계산기
-        # Pedestrian 기본 정보 + 시뮬레이션동안 발생하는 정보 반환
         
         self.peds = Pedestrians(self.cfg)
-        self.ped_state = PedState(config.scene_config)        
+        # self.ped_state = PedState(config.scene_config)        
         # 시뮬레이터 안에서 인식하기 위함(힘 계산을 위해)
         self.obstacle_state = ObstacleState(config.obstacles_info)
         self.repulsive_force_name = self.cfg.force_config["repulsive_force"]["name"]
@@ -101,7 +99,7 @@ class Simulator(object):
 
 
     def do_step(self, visible_state, visible_max_speeds, visible_group, external_force=None):
-        self.ped_state.set_state(visible_state, visible_group, visible_max_speeds)        
+        # self.ped_state.set_state(visible_state, visible_group, visible_max_speeds)        
         force = self.compute_forces(external_force=external_force)
         vel = visible_state[:,2:4]
         tau = visible_state[:, 6:7]

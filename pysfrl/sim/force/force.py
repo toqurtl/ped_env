@@ -24,19 +24,20 @@ class Force(object):
     @classmethod
     def obstacle_force(cls, sim):
         cfg = sim.cfg.force_config["obstacle_force"]
+        visible_state, visible_idx, visible_max_speeds = sim.get_visible_info()
         sigma = cfg["sigma"]
-        threshold = cfg["threshold"] + sim.ped_state.agent_radius
-        force = np.zeros((sim.ped_state.size(), 2))
+        threshold = cfg["threshold"] + sim.cfg.agent_radius
+        force = np.zeros((len(visible_state), 2))
         if len(sim.get_obstacles()) == 0:
             return force
 
         obstacles = np.vstack(sim.get_obstacles())        
-        pos = sim.ped_state.pos()
+        pos = visible_state[:, 0:2]
 
         for i, p in enumerate(pos):
             diff = p - obstacles
             directions, dist = stateutils.normalize(diff)
-            dist = dist - sim.ped_state.agent_radius
+            dist = dist - sim.cfg.agent_radius
             if np.all(dist >= threshold):
                 continue
             dist_mask = dist < threshold

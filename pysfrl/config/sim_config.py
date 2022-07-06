@@ -69,6 +69,10 @@ class SimulationConfig(object):
         return self.scene_config["step_width"]
 
     @property
+    def agent_radius(self):
+        return self.scene_config["agent_radius"]
+
+    @property
     def initial_state_arr(self):
         state_list = []
         for ped_info in self.initial_state_info.values():
