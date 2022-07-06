@@ -33,7 +33,7 @@ class PysfrlEnv(gym.Env):
     def is_finished(self):
         return self.simulator.current_state[self.learned_idx, Index.finished.index] == 1        
 
-    def step(self, action):        
+    def step(self, action):            
         while True:      
             _, visible_idx = self.simulator.get_visible_info()
             if not self.learned_idx in visible_idx:
@@ -48,6 +48,7 @@ class PysfrlEnv(gym.Env):
         
         visible_state, _ = self.simulator.get_visible_info()
         pre_state = self.simulator.current_state.copy()
+        
         next_state = self.simulator.next_state(pre_state, action)
         next_state = self.simulator.update_new_state(next_state)
 
@@ -58,9 +59,9 @@ class PysfrlEnv(gym.Env):
         done = self.is_finished() or self.simulator.time_step > 1000
         return obs, reward, done, self.info()
     
-    def observation(self, sim: Simulator, visible_state):        
+    def observation(self, sim: Simulator, visible_state):         
         extra_force = sim.extra_forces(visible_state)[self.learned_idx]
-        neighbor_info = CustomUtils.neighbor_info(visible_state, self.learned_idx)
+        neighbor_info = CustomUtils.neighbor_info(visible_state, self.learned_idx)        
         return np.concatenate((extra_force, neighbor_info))
 
     def reward(self, sim: Simulator, pre_state, next_state, visible_state):
@@ -84,5 +85,17 @@ class PysfrlEnv(gym.Env):
 
     def reset(self):
         self.simulator.reset()
-        return
+        while True:      
+            _, visible_idx = self.simulator.get_visible_info()
+            if not self.learned_idx in visible_idx:
+                self.simulator.step_once()                
+            elif len(visible_idx) < 2:
+                self.simulator.step_once()                 
+            else:
+                break
+            if self.simulator.time_step > 10000:
+                print("inifitie")
+                break
+        visible_state, _ = self.simulator.get_visible_info()
+        return self.observation(self.simulator, visible_state)
 

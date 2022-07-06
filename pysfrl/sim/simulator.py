@@ -106,7 +106,7 @@ class Simulator(object):
             # visible state들에 대해서 힘 계산해서 변경
             # next_state = self.do_step(visible_state, external_force)
 
-            vel = visible_state[:,2:4]
+            vel = visible_state[:,2:4]            
             force = self.compute_forces(visible_state, external_force=external_force)        
 
             desired_velocity = vel + self.step_width * force

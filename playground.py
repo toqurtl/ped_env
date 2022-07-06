@@ -6,7 +6,6 @@ from pysfrl.sim.simulator import Simulator
 from pysfrl.sim.utils.sim_result import SimResult
 from pysfrl.visualize.plots import PlotGenerator
 from pysfrl.experiment import utils
-
 import numpy as np
 
 from pysfrl.rl.env import PysfrlEnv
@@ -43,15 +42,28 @@ simulator = exp.get_simulator("118")
 
 
 env = PysfrlEnv(simulator, 0)
+# model = PPO("MlpPolicy", env, verbose=1, tensorboard_log="./tensorboard/")
+# model.learn(total_timesteps=1000, tb_log_name="first_run")
+# model.save("model/test_model")
+# print('evaluate')
+model = PPO.load("model/test_model.zip", env=env)
 
-model = PPO("MlpPolicy", env, verbose=1, tensorboard_log="./tensorboard/")
-model.learn(total_timesteps=1000, tb_log_name="first_run")
+# mean_reward, std_reward = evaluate_policy(model, env, n_eval_episodes=10, deterministic=True)
+# print(f"mean_reward={mean_reward:.2f} +/- {std_reward}")
 
-action = np.array([1,-1])
+# model = PPO.load("model/test_model.zip", env=env)
+obs = env.reset()
 
 while True:
-    obs, reward, done, info = env.step(action)
+    action, states = model.predict(obs)
+    obs, reward, done, info = env.step(action)    
     if done:
+        s = env.simulator
+        sim_result_path = os.path.join(".", "sim_result.json")
+        fig_path = os.path.join(".", "trajectory.png")
+        SimResult.sim_result_to_json(s, sim_result_path)
+        fig, ax = PlotGenerator.generate_sim_result_plot((-5,5,-10,10), s)    
+        fig.savefig(fig_path)
         break
 
 
