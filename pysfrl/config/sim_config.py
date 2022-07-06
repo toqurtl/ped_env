@@ -61,6 +61,10 @@ class SimulationConfig(object):
         return self.max_speed_multiplier * self.initial_speeds
 
     @property
+    def max_speed(self):        
+        return self.scene_config["max_speed"]
+
+    @property
     def step_width(self):
         return self.scene_config["step_width"]
 

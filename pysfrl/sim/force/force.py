@@ -10,14 +10,12 @@ class Force(object):
         cfg = sim.cfg.force_config["desired_force"]
         relaxation_time = cfg["relaxation_time"]
         goal_threshold = cfg["goal_threshold"]
-        pos = sim.ped_state.pos()
-        vel = sim.ped_state.vel()
-        goal = sim.ped_state.goal()
+        visible_state, visible_idx, visible_max_speeds = sim.get_visible_info()
+        pos, vel, goal = visible_state[:, 0:2], visible_state[:, 2:4], visible_state[:, 4:6]       
         direction, dist = stateutils.normalize(goal - pos)
-        force = np.zeros((sim.ped_state.size(), 2))
-        
+        force = np.zeros((len(visible_state), 2))
         force[dist > goal_threshold] = (
-            direction * sim.ped_state.max_speeds.reshape((-1, 1)) - vel.reshape((-1, 2))
+            direction * visible_max_speeds.reshape((-1, 1)) - vel.reshape((-1, 2))
         )[dist > goal_threshold, :]
         force[dist <= goal_threshold] = -1.0 * vel[dist <= goal_threshold]        
         force /= relaxation_time        

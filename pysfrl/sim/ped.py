@@ -21,13 +21,14 @@ class PedAgent(object):
         self.final_phase = ped_info["final_phase"]        
         self.goal_schedule = ped_info["goal_schedule"]
         self.sim_state = None
-        self._initialize()
+        self.reset()
 
     @property
     def current_state(self):
         return self.states[-1]
 
-    def _initialize(self):
+    def reset(self):
+        self.states.clear()
         state = [self.base_data.get(index.str_name) for index in index_list]        
         self.states.append(np.array(state))
         return
@@ -91,6 +92,3 @@ class PedAgent(object):
     @property
     def finished(self):
         return self.current_state[Index.finished.index]
-
-    def reset(self):
-        return

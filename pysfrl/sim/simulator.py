@@ -15,6 +15,7 @@ repulsive_force_dict ={
     "my_force_3": Force.basic_sfm
 }
 
+STEP_WIDTH = 0.067
 
 class Simulator(object):
     def __init__(self, config: SimulationConfig):
@@ -24,7 +25,7 @@ class Simulator(object):
         # components: Ped, pedstate 계산기, Obstacle 계산기
         # Pedestrian 기본 정보 + 시뮬레이션동안 발생하는 정보 반환
         
-        self.peds = Pedestrians(self.cfg.ped_info, self.cfg.initial_state_info)
+        self.peds = Pedestrians(self.cfg)
         self.ped_state = PedState(config.scene_config)        
         # 시뮬레이터 안에서 인식하기 위함(힘 계산을 위해)
         self.obstacle_state = ObstacleState(config.obstacles_info)
@@ -32,8 +33,7 @@ class Simulator(object):
 
         # Simulation 
         self.time_step = 0
-        self.time_table = None
-        self.step_width_list = []
+        self.time_table = None        
         pass
 
     @property
@@ -41,8 +41,13 @@ class Simulator(object):
         return self.cfg.initial_state_arr
 
     @property
+    def current_state(self):
+        return self.peds.current_state
+
+    @property
     def max_speeds(self):
-        return self.cfg.max_speeds
+        return np.ones((self.num_peds())) * self.cfg.max_speed
+        # return self.cfg.max_speeds
     
     @property
     def initial_speeds(self):
@@ -50,31 +55,22 @@ class Simulator(object):
     
     # obstacle_info, [[1,2,3,4],[1,2,3,4]] 이런식으로 된 친구들
     @property
-    def obstacle_info(self):        
+    def obstacle_info(self):
         return np.array(self.cfg.obstacles_info)
     
     @property
     def peds_states(self):
-        return np.array(self.peds.states)    
+        return np.array(self.peds.states)
+
+    @property
+    def step_width(self):
+        return self.cfg.step_width 
     
     def num_peds(self):
         return self.peds.num_peds
     
     def get_obstacles(self):
         return self.obstacle_state.obstacles
-
-    def set_step_width(self):
-        new_step_width = 0
-        if self.time_table is None:
-            new_step_width = self.cfg.step_width       
-        else:# time_table setting 부분 완성 후
-            try: 
-                new_step_width = self.time_table[self.time_step]                
-            except IndexError:
-                new_step_width = 0.133            
-        self.ped_state.step_width = new_step_width
-        self.step_width_list.append(new_step_width)
-        return
 
     def compute_forces(self, external_force=None):
         desired_force = Force.desired_force(self)
@@ -110,12 +106,17 @@ class Simulator(object):
         vel = visible_state[:,2:4]
         tau = visible_state[:, 6:7]
         desired_velocity = vel + 0.067 * force
-        desired_velocity = self.capped_velocity(desired_velocity, 2.1)
+        # desired_velocity = self.capped_velocity(desired_velocity, 2.1)
+        desired_velocity = self.capped_velocity(desired_velocity, visible_max_speeds)
         
-
-
-        next_state, next_group_state = self.ped_state.step(force, visible_state)                
-        return next_state, next_group_state
+        visible_state[:, 0:2] += desired_velocity * STEP_WIDTH  
+        visible_state[:, 2:4] = desired_velocity
+        if visible_group is None:
+            next_group_state = []
+        else:
+            next_groups_state = []
+        
+        return visible_state, next_group_state
             
     def after_step(self, next_state, next_group_state):
         # Pedestrian에 결과를 업데이트
@@ -125,14 +126,11 @@ class Simulator(object):
         self.time_step += 1
         return True
     
-    def get_visible_states(self, whole_state):        
-        visible_state = UpdateManager.get_visible(whole_state)
-        visible_idx = UpdateManager.get_visible_idx(whole_state)
-        visible_max_speeds = self.max_speeds[visible_idx]
-        return visible_state, visible_idx, visible_max_speeds
+    def get_visible_info(self):
+        return self.peds.visible_info()
 
-    def step_once(self, external_force=None):        
-        whole_state = self.peds.current_state.copy()        
+    def step_once(self, external_force=None):
+        whole_state = self.peds.current_state.copy()
         # 시뮬레이션 종료 여부 판단(모든 agent 끝났을 때)
         if UpdateManager.simul_finished(whole_state):
             return True
@@ -140,11 +138,8 @@ class Simulator(object):
         # 힘 계산에 필요한 visible한 agent들의 state, idx 가져옴
         visible_state = UpdateManager.get_visible(whole_state)
         visible_idx = UpdateManager.get_visible_idx(whole_state)
-        visible_max_speeds = self.max_speeds[visible_idx]        
+        visible_max_speeds = self.max_speeds[visible_idx]
         
-        # step_width update
-        self.set_step_width()
-
         # group 행동할 때 설정
         next_group_state = None
 
@@ -168,28 +163,9 @@ class Simulator(object):
         # finished
         whole_state = UpdateManager.update_finished(whole_state)
         # whole_state를 pedestrians에 저장
-        self.after_step(whole_state, next_group_state)        
+        self.after_step(whole_state, next_group_state)
         return False        
 
     def reset(self):
-        return
-
-    def save(self, file_path):
-        result_data = {}        
-        time = 0
-        result_data[0] = {
-            "step_width": time,
-            "states": self.peds.states[0].tolist()
-        }
-        
-        for i in range(0, len(self.step_width_list)):
-            time += self.step_width_list[i]
-            result_data[i+1] = {
-                "step_width": time,
-                "states": self.peds.states[i+1].tolist()
-            }
-        
-        with open(file_path, 'w') as f:
-            json.dump(result_data, f, indent=4)        
         return
 

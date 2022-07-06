@@ -6,17 +6,10 @@ class SimResult(object):
     @staticmethod
     def sim_result_to_json(sim: Simulator, file_path):    
         result_data = {}        
-        time = 0
-        result_data[0] = {
-            "step_width": time,
-            "states": sim.peds.states[0].tolist()
-        }
-        
-        for i in range(0, len(sim.step_width_list)):
-            time += sim.step_width_list[i]
-            result_data[i+1] = {
-                "step_width": time,
-                "states": sim.peds.states[i+1].tolist()
+        for i in range(0, sim.time_step+1):            
+            result_data[i] = {
+                "step_width": sim.step_width,
+                "states": sim.peds.states[i].tolist()
             }
         
         with open(file_path, 'w') as f:

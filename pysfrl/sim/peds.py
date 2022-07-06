@@ -1,14 +1,20 @@
 from typing import Dict, List
 import numpy as np
+
+from pysfrl.sim.utils import stateutils
+from pysfrl.sim.update_manager import UpdateManager
+from pysfrl.config.sim_config import SimulationConfig
 from .ped import PedAgent
 from .parameters import DataIndex as Index
 
+
 class Pedestrians(object):
-    def __init__(self, ped_info, initial_state_info):
+    def __init__(self, cfg: SimulationConfig):
+        self.cfg = cfg
         self.peds: Dict[int, PedAgent] = {}
         self.states: List[np.ndarray] = []
         self.group_states = []        
-        self._initialize(ped_info, initial_state_info)
+        self._initialize(cfg.ped_info, cfg.initial_state_info)
     
     def _initialize(self, ped_info, initial_state_info):
         initial_state_arr = []            
@@ -32,6 +38,32 @@ class Pedestrians(object):
     @property
     def current_state(self):
         return self.states[-1]
+
+    @property
+    def max_speeds(self):
+        return np.ones((self.num_peds)) * self.cfg.max_speed
+
+    def visible_info(self):
+        whole_state = self.current_state.copy()
+        visible_state = UpdateManager.get_visible(whole_state)
+        visible_idx = UpdateManager.get_visible_idx(whole_state)
+        visible_max_speeds = self.max_speeds[visible_idx]
+        return visible_state, visible_idx, visible_max_speeds
+
+    # def pos(self):
+    #     return self.current_state[:, 0:2]
+    
+    # def vel(self):
+    #     return self.current_state[:, 2:4]
+    
+    # def goal(self):
+    #     return self.current_state[:, 4:6]
+
+    # def size(self):
+    #     return self.current_state.shape[0]
+
+    # def speeds(self):
+    #     return stateutils.speeds(self.current_state)
 
     def state_at(self, time_step):
         return self.states[time_step]

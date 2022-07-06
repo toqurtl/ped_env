@@ -82,6 +82,7 @@
         "agent_radius": 0.35,
         "step_width": 0.063,
         "max_speed_multiplier": 1.1,
+        "max_speed": 2.0,
         "tau": 0.5,
         "resolution": 10
     },
