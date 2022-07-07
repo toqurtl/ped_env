@@ -6,6 +6,7 @@ from pysfrl.sim.simulator import Simulator
 from pysfrl.sim.parameters import DataIndex as Index
 import random
 import numpy as np
+from pysfrl.sim.update_manager import UpdateManager
 
 from pysfrl.sim.utils.custom_utils import CustomUtils
 
@@ -47,8 +48,19 @@ class PysfrlEnv(gym.Env):
                 print(self.simulator.cfg.config_id, "finished")
                 return self.dummpy_output()
 
-        pre_state = self.simulator.current_state.copy()        
-        next_state = self.simulator.next_state(pre_state, action)
+        pre_state = self.simulator.current_state.copy()
+        visible_state, visible_idx = self.simulator.get_visible_info()        
+        
+        extra_forces = self.simulator.extra_forces(visible_state)
+        repulsive_force = self.simulator.repulsive_forces(visible_state)
+        
+        v_idx = CustomUtils.find_visible_idx(visible_state, self.learned_idx)                
+        repulsive_force[v_idx] = action        
+        force  = extra_forces + repulsive_force
+        visible_state = self.simulator.calcualte_next_visible_state(visible_state, force)
+        next_state = UpdateManager.new_state(pre_state, visible_state)
+                
+        # next_state = self.simulator.next_state(pre_state, external_force=action)
         next_state = self.simulator.update_new_state(next_state)
         self.simulator.peds.update(next_state)
         self.simulator.time_step += 1

@@ -23,9 +23,7 @@ def save_info_from_video(v: VideoData, save_path):
     generate_trajectory_fig(v, fig_path)
     return
     
-def generate_config(v: VideoData, cfg_id) -> SimulationConfig:    
-    entry_path = os.path.abspath(".")
-    default_cfg_path = os.path.join(entry_path, "pysfrl", "test", "data", "simulation_config_sample.json")
+def generate_config(v: VideoData, cfg_id, default_cfg_path) -> SimulationConfig:        
     with open(default_cfg_path, "r") as f:
         default_cfg = json.load(f)
 

@@ -4,13 +4,15 @@ from pysfrl.sim.components.obstaclestate import ObstacleState
 from pysfrl.sim.update_manager import UpdateManager
 from pysfrl.sim.force.force import Force
 from pysfrl.sim.utils.custom_utils import CustomUtils
+from stable_baselines3 import PPO
 import numpy as np
 
 
 repulsive_force_dict ={
     "my_force": Force.social_sfm_1,
     "my_force_2": Force.social_sfm_2,
-    "my_force_3": Force.basic_sfm
+    "my_force_3": Force.basic_sfm,
+    "nn_repulsive": Force.nn_repulsive
 }
 
 STEP_WIDTH = 0.067
@@ -25,8 +27,13 @@ class Simulator(object):
         # Simulation 
         self.peds = Pedestrians(self.cfg)
         self.time_step = 0
-        self.time_table = None        
-        pass
+        self.time_table = None
+
+        # model (if rl)
+        self.model = None
+        if self.cfg.force_config["repulsive_force"] == "nn_repulsive":
+            model_path = self.cfg.force_config["repulsive_force"]["params"]["model_path"]
+            self.model = PPO.load()
 
     # 고정값
     @property
@@ -104,16 +111,8 @@ class Simulator(object):
         if len(visible_state) > 0:
             # visible state들에 대해서 힘 계산해서 변경
             # next_state = self.do_step(visible_state, external_force)
-
-            vel = visible_state[:,2:4]            
-            force = self.compute_forces(visible_state, external_force=external_force)        
-
-            desired_velocity = vel + self.step_width * force
-            visible_max_speeds = CustomUtils.max_speeds(len(visible_state), self.cfg.max_speed)
-            desired_velocity = CustomUtils.capped_velocity(desired_velocity, visible_max_speeds)
-            
-            visible_state[:, 0:2] += desired_velocity * self.step_width
-            visible_state[:, 2:4] = desired_velocity
+            force = self.compute_forces(visible_state, external_force=external_force)
+            visible_state = self.calcualte_next_visible_state(visible_state, force)
             # 변경된 visbile state를 whole state에 반영            
             whole_state = UpdateManager.new_state(whole_state, visible_state)
         
@@ -134,9 +133,12 @@ class Simulator(object):
         obstacle_force = Force.obstacle_force(self.cfg, visible_state, self.get_obstacles())
         return desired_force + obstacle_force
 
+    def repulsive_forces(self, visible_state):
+        return repulsive_force_dict[self.repulsive_force_name](self.cfg, visible_state)
+
     def compute_forces(self, visible_state, external_force=None):        
         if external_force is None:
-            repulsive_force = repulsive_force_dict[self.repulsive_force_name](self.cfg, visible_state)
+            return self.repulsive_forces(visible_state)
         else:
             repulsive_force = external_force
         return self.extra_forces(visible_state) + repulsive_force
@@ -146,3 +148,12 @@ class Simulator(object):
         self.time_step = 0
         return
 
+    def calcualte_next_visible_state(self, visible_state, force):
+        vel = visible_state[:,2:4]
+        desired_velocity = vel + self.step_width * force
+        visible_max_speeds = CustomUtils.max_speeds(len(visible_state), self.cfg.max_speed)
+        desired_velocity = CustomUtils.capped_velocity(desired_velocity, visible_max_speeds)
+        
+        visible_state[:, 0:2] += desired_velocity * self.step_width
+        visible_state[:, 2:4] = desired_velocity
+        return visible_state

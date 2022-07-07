@@ -120,3 +120,12 @@ class Force(object):
             force[norm_factors>10] = 5 * normalized[norm_factors >10]            
             
             return - force
+
+    @classmethod
+    def nn_repulsive(cls, sim_cfg: SimulationConfig, state, model):
+        if len(state) < 2:
+            return 0
+        else:
+            action, states = model.predict()
+            return action
+            

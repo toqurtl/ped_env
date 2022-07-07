@@ -8,10 +8,17 @@ import json
 import os
 
 
+entry_path = os.path.abspath(".")
+DEFAULT_CFG_PATH = os.path.join(entry_path, "pysfrl", "test", "data", "simulation_config_sample.json")
+
 # Experiment 폴더 관리(만들고, State 보고 등등)
 class ExpSetting(object):
     def __init__(self, exp_folder_path):
         self.exp_folder_path = exp_folder_path
+        self.default_cfg_path = DEFAULT_CFG_PATH
+
+    def set_default_cfg_path(self, cfg_path):
+        self.default_cfg_path = cfg_path
 
     def get_simulator_list(self):
         return [self.get_simulator(cfg_id) for cfg_id in self.cfg_id_list()]            
@@ -46,7 +53,8 @@ class ExpSetting(object):
         return
 
     def add_scene_from_video(self, v: VideoData, cfg_id):
-        sim_config: SimulationConfig = utils.generate_config(v, cfg_id)        
+        
+        sim_config: SimulationConfig = utils.generate_config(v, cfg_id, default_cfg_path=self.default_cfg_path)        
         self.add_scene(sim_config)
         config_id = sim_config.config_id        
         utils.save_info_from_video(v, self.ground_truth_folder_path(config_id))

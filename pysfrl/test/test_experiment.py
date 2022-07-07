@@ -23,19 +23,6 @@ def generate_scene_from_video():
         exp.add_scene_from_video(video_data, vid_id)  
 
 
-def test_gt_information():
-    exp = ExpSetting(exp_folder_path=exp_folder_path)
-    # scene folder 만들기
-    for scene_folder_path in exp.scene_folder_path_list():
-        a = utils.gt_trajectory_to_numpy(scene_folder_path)
-        xy_range = (-5, 5, -10, 10)
-        sub_plots = PlotGenerator.generate_sub_plots(xy_range)
-        sub_plots = PlotGenerator.plot_trajectory(sub_plots, a)
-        fig, ax = sub_plots
-        fig_path = os.path.join(scene_folder_path, "data", "gt_trajectory.png")
-        fig.savefig(fig_path)
-
-
 def test_simulation_in_experiment_environment():
     exp = ExpSetting(exp_folder_path=exp_folder_path)
     exp.simulate_every_scene()
