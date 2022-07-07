@@ -71,7 +71,7 @@ class Simulator(object):
     def simulate(self):
         success = True
         while True:            
-            is_finished = self.step_once()             
+            is_finished = self.step_once()           
             if is_finished:
                 break
 
@@ -83,13 +83,12 @@ class Simulator(object):
     def check_finished(self):
         return UpdateManager.simul_finished(self.current_state)
 
-    def step_once(self, external_force=None):
-        
+    def step_once(self, external_force=None):        
         # 시뮬레이션 종료 여부 판단(모든 agent 끝났을 때)
         if self.check_finished():
             return True
-
-        whole_state = self.current_state.copy()
+        
+        whole_state = self.current_state.copy()        
         whole_state = self.next_state(whole_state, external_force)
         whole_state = self.update_new_state(whole_state)  
         

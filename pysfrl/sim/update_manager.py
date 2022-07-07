@@ -11,7 +11,7 @@ class UpdateManager(object):
     @classmethod
     def is_arrived(cls, state: np.ndarray):
         vecs = state[:,4:6] - state[:, 0:2]        
-        distance_to_target = np.array([np.linalg.norm(line) for line in vecs])
+        distance_to_target = np.array([np.linalg.norm(line) for line in vecs])        
         return distance_to_target < 0.5
 
     @classmethod

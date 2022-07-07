@@ -1,5 +1,6 @@
 from pysfrl.sim.force.potentials import PedPedPotential
 from pysfrl.sim.utils import stateutils
+from pysfrl.sim.parameters import DataIndex as Index
 import numpy as np
 
 
@@ -80,12 +81,12 @@ class CustomUtils(object):
     # 가장 가까운 사람과의 거리
     @classmethod
     def neighbor_info(cls, state, idx):        
-        # 사람이 혼자일 때 처리
+        # 사람이 혼자일 때 처리        
         distance_vec_mat = stateutils.vec_diff(state)[idx]
         distance_mat = stateutils.distance_matrix(state)[idx]
         sort_idx = np.argsort(np.argsort(distance_mat))
-        # 가장 가까운 사람의 상대위치벡터, 상대속도벡터        
-        neigbor_info = distance_vec_mat[sort_idx==1][idx][:4]
+        # 가장 가까운 사람의 상대위치벡터, 상대속도벡터
+        neigbor_info = distance_vec_mat[sort_idx==1][0][:4]
         return neigbor_info
 
     @classmethod
@@ -98,4 +99,9 @@ class CustomUtils(object):
         state[:, 2:4] = desired_velocity
         return state[:, 0:2], state[:, 2:4]
 
-    
+    # 해당 idx가 visible_idx에서 몇번 째인지
+    @classmethod
+    def find_visible_idx(cls, visible_state, idx):
+        a = visible_state[:, Index.id.index].astype(np.int64)
+        visible_idx = np.where(a == idx)[0][0]
+        return visible_idx

@@ -13,6 +13,9 @@ class ExpSetting(object):
     def __init__(self, exp_folder_path):
         self.exp_folder_path = exp_folder_path
 
+    def get_simulator_list(self):
+        return [self.get_simulator(cfg_id) for cfg_id in self.cfg_id_list()]            
+
     def scene_folder_path_list(self):
         folder_list = []
         for scene_path in os.listdir(self.exp_folder_path):
@@ -50,16 +53,9 @@ class ExpSetting(object):
         return
 
     def simulate_scene(self, cfg_id):
-        sim_cfg = SimulationConfig()
+        s = self.get_simulator(cfg_id)
         folder_path = self.scene_folder_path(cfg_id)
-        sim_cfg_path = os.path.join(folder_path, "sim_cfg.json")        
-        with open(sim_cfg_path, "r") as f:
-            data = json.load(f)
-        sim_cfg.set_config(data)        
-        s = Simulator(sim_cfg)
-
-        success = s.simulate()
-        
+        success = s.simulate()        
         sim_result_path = os.path.join(folder_path, "sim_result.json")
         fig_path = os.path.join(folder_path, "trajectory.png")
         SimResult.sim_result_to_json(s, sim_result_path)
