@@ -17,7 +17,7 @@ class PysfrlEnv(gym.Env):
         self.simulator_list = simulator_list                
         self.simulator: Simulator = None
         self.observation_space = spaces.Box(low=-10, high=10, shape=(6,), dtype=np.float32)
-        self.action_space = spaces.Box(low=-3,high=3, shape=(2,), dtype=np.float32)
+        self.action_space = spaces.Box(low=-1,high=1, shape=(2,), dtype=np.float32)
         self.learned_idx = learned_idx
 
     @property
@@ -43,7 +43,7 @@ class PysfrlEnv(gym.Env):
                 break
 
             if finished:
-                print(self.simulator.cfg.config_id, "finished")
+                # print(self.simulator.cfg.config_id, "finished")
                 return self.dummpy_output()
 
         pre_state = self.simulator.current_state.copy()
@@ -67,7 +67,7 @@ class PysfrlEnv(gym.Env):
         done = self.is_finished() or self.simulator.time_step > 1000
 
         if done:
-            print(self.simulator.cfg.config_id, self.learned_idx, "finished")
+            # print(self.simulator.cfg.config_id, self.learned_idx, "finished")
             obs = None
             reward = 5
             return obs, reward, done, self.info()        
@@ -90,14 +90,16 @@ class PysfrlEnv(gym.Env):
         # idx를 주면, 그 idx와 가장 가까운 거리에 있는 거리를 구하는 함수
         reward = 0
         delta = CustomUtils.goal_distance_delta(pre_state, next_state, self.learned_idx)
-        if delta > 0.5:
-            reward += 1
+        if delta > 1:
+            reward +=2
+        elif 1> delta > 0.5:
+            reward +=1
 
         # idx를 주면 목적지와의 거리를 계산하는 함수
         obs = self.observation(sim, visible_state, self.learned_idx)
         neighbor_distance = np.linalg.norm(obs[2:4])
         if neighbor_distance < 1:
-            reward -= 5
+            reward -= 2
         return reward
 
     def info(self):
@@ -110,7 +112,7 @@ class PysfrlEnv(gym.Env):
         self.simulator = random.choice(self.simulator_list)
         self.learned_idx = random.choice(range(0, self.num_ped))        
         self.simulator.reset()
-        print(self.simulator.cfg.config_id, self.learned_idx, "start")
+        # print(self.simulator.cfg.config_id, self.learned_idx, "start")
         while True:
             is_skip_step, finished = self.skip_step()
             if not is_skip_step:

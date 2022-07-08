@@ -138,8 +138,9 @@ class Simulator(object):
         return repulsive_force_dict[self.repulsive_force_name](self.cfg, visible_state, self.get_obstacles(), self.model)
 
     def compute_forces(self, visible_state, external_force=None):        
-        if external_force is None:
-            return self.repulsive_forces(visible_state)
+        if external_force is None:            
+            repulsive_force =  self.repulsive_forces(visible_state)
+            # print(repulsive_force)
         else:
             repulsive_force = external_force
         return self.extra_forces(visible_state) + repulsive_force
