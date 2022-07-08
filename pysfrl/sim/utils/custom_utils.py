@@ -105,3 +105,4 @@ class CustomUtils(object):
         a = visible_state[:, Index.id.index].astype(np.int64)
         visible_idx = np.where(a == idx)[0][0]
         return visible_idx
+    

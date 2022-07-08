@@ -1,13 +1,11 @@
 from typing import List
 import gym
 from gym import spaces
-from pysfrl.rl.utils import neighbor_distance
 from pysfrl.sim.simulator import Simulator
 from pysfrl.sim.parameters import DataIndex as Index
 import random
 import numpy as np
 from pysfrl.sim.update_manager import UpdateManager
-
 from pysfrl.sim.utils.custom_utils import CustomUtils
 
 
@@ -54,6 +52,7 @@ class PysfrlEnv(gym.Env):
         extra_forces = self.simulator.extra_forces(visible_state)
         repulsive_force = self.simulator.repulsive_forces(visible_state)
         
+        # learned_idx의 repulsive_force를 수정함
         v_idx = CustomUtils.find_visible_idx(visible_state, self.learned_idx)                
         repulsive_force[v_idx] = action        
         force  = extra_forces + repulsive_force
@@ -77,12 +76,12 @@ class PysfrlEnv(gym.Env):
             if len(visible_state) == 1:
                 dummy_obs = np.zeros(self.observation_space.sample().shape)         
                 return dummy_obs, 0, False, self.info()
-            obs = self.observation(self.simulator, visible_state)
+            obs = self.observation(self.simulator, visible_state, self.learned_idx)
             reward = self.reward(self.simulator, pre_state, next_state, visible_state)            
         return obs, reward, done, self.info()
     
-    def observation(self, sim: Simulator, visible_state):
-        visible_idx = CustomUtils.find_visible_idx(visible_state, self.learned_idx)       
+    def observation(self, sim: Simulator, visible_state, learned_idx):
+        visible_idx = CustomUtils.find_visible_idx(visible_state, learned_idx)
         extra_force = sim.extra_forces(visible_state)[visible_idx]        
         neighbor_info = CustomUtils.neighbor_info(visible_state, visible_idx)        
         return np.concatenate((extra_force, neighbor_info))
@@ -91,13 +90,13 @@ class PysfrlEnv(gym.Env):
         # idx를 주면, 그 idx와 가장 가까운 거리에 있는 거리를 구하는 함수
         reward = 0
         delta = CustomUtils.goal_distance_delta(pre_state, next_state, self.learned_idx)
-        if delta > 1.5:
+        if delta > 0.5:
             reward += 1
 
         # idx를 주면 목적지와의 거리를 계산하는 함수
-        obs = self.observation(sim, visible_state)
+        obs = self.observation(sim, visible_state, self.learned_idx)
         neighbor_distance = np.linalg.norm(obs[2:4])
-        if neighbor_distance < 2:
+        if neighbor_distance < 1:
             reward -= 5
         return reward
 
@@ -121,7 +120,7 @@ class PysfrlEnv(gym.Env):
                 obs, _, _, _ = self.dummpy_output()
                 return obs
         visible_state, _ = self.simulator.get_visible_info()
-        return self.observation(self.simulator, visible_state)
+        return self.observation(self.simulator, visible_state, self.learned_idx)
 
     # step을 스킵해야 하는지 아닌 지 판단
     # target_idx가 혼자 있거나, visible하지 않은 경우 그냥 스킵

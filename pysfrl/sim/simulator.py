@@ -31,9 +31,10 @@ class Simulator(object):
 
         # model (if rl)
         self.model = None
-        if self.cfg.force_config["repulsive_force"] == "nn_repulsive":
-            model_path = self.cfg.force_config["repulsive_force"]["params"]["model_path"]
-            self.model = PPO.load()
+        
+        if self.cfg.force_config["repulsive_force"]["name"] == "nn_repulsive":
+            model_path = self.cfg.force_config["repulsive_force"]["params"]["model_path"]            
+            self.model = PPO.load(model_path)
 
     # 고정값
     @property
@@ -134,7 +135,7 @@ class Simulator(object):
         return desired_force + obstacle_force
 
     def repulsive_forces(self, visible_state):
-        return repulsive_force_dict[self.repulsive_force_name](self.cfg, visible_state)
+        return repulsive_force_dict[self.repulsive_force_name](self.cfg, visible_state, self.get_obstacles(), self.model)
 
     def compute_forces(self, visible_state, external_force=None):        
         if external_force is None:
@@ -157,3 +158,4 @@ class Simulator(object):
         visible_state[:, 0:2] += desired_velocity * self.step_width
         visible_state[:, 2:4] = desired_velocity
         return visible_state
+
