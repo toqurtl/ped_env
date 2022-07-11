@@ -101,7 +101,7 @@
         "repulsive_force":{ 
             "name": "nn_repulsive",
             "params":{
-                "model_path": "model\\0708_2.zip"
+                "model_path": "model\\0708_3.zip"
             }
         }        
     },

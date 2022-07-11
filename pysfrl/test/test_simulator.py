@@ -47,7 +47,7 @@ def video_to_simulate(scene_folder, sim_result_folder):
     s.simulate()
 
     # 결과 저장
-    SimResult.sim_result_to_json(s, sim_result_path)    
+    SimResult.sim_result_to_json(s, sim_result_path)
     fig, ax = PlotGenerator.generate_sim_result_plot((-5,5,-10,10), s)    
     fig.savefig(fig_path)
     return

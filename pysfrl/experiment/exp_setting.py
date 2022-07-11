@@ -4,6 +4,7 @@ from pysfrl.data import utils
 from pysfrl.sim.simulator import Simulator
 from pysfrl.sim.utils.sim_result import SimResult
 from pysfrl.visualize.plots import PlotGenerator
+from pysfrl.experiment.file_finder import FileFinder
 import json
 import os
 
@@ -16,6 +17,7 @@ class ExpSetting(object):
     def __init__(self, exp_folder_path):
         self.exp_folder_path = exp_folder_path
         self.default_cfg_path = DEFAULT_CFG_PATH
+        self.valid_folder_path = None
 
     def set_default_cfg_path(self, cfg_path):
         self.default_cfg_path = cfg_path
@@ -52,8 +54,7 @@ class ExpSetting(object):
         sim_cfg.save(sim_cfg_file_path)
         return
 
-    def add_scene_from_video(self, v: VideoData, cfg_id):
-        
+    def add_scene_from_video(self, v: VideoData, cfg_id):        
         sim_config: SimulationConfig = utils.generate_config(v, cfg_id, default_cfg_path=self.default_cfg_path)        
         self.add_scene(sim_config)
         config_id = sim_config.config_id        
@@ -65,8 +66,10 @@ class ExpSetting(object):
         folder_path = self.scene_folder_path(cfg_id)
         success = s.simulate()        
         sim_result_path = os.path.join(folder_path, "sim_result.json")
+        summary_path = os.path.join(folder_path, "summary.json")
         fig_path = os.path.join(folder_path, "trajectory.png")
         SimResult.sim_result_to_json(s, sim_result_path)
+        SimResult.summary_to_json(s, summary_path)
         fig, ax = PlotGenerator.generate_sim_result_plot((-5,5,-10,10), s)    
         fig.savefig(fig_path)
         return success
@@ -80,8 +83,6 @@ class ExpSetting(object):
         sim_cfg.set_config(data)        
         return Simulator(sim_cfg)
 
-
     def simulate_every_scene(self):
-        for cfg_id in self.cfg_id_list():            
+        for cfg_id in self.cfg_id_list():     
             success = self.simulate_scene(cfg_id)
-            

@@ -40,8 +40,11 @@ def test_simulate_with_model():
         if done:
             s = env.simulator
             sim_result_path = os.path.join(".", "sim_result.json")
+            summary_path = os.path.join(".", "summary.json")
             fig_path = os.path.join(".", "trajectory.png")
             SimResult.sim_result_to_json(s, sim_result_path)
+            SimResult.summary_to_json(s, summary_path)
+
             fig, ax = PlotGenerator.generate_sim_result_plot((-5,5,-10,10), s)    
             fig.savefig(fig_path)
             break

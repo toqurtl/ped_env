@@ -1,3 +1,4 @@
+from sre_constants import SUCCESS
 from pysfrl.config.sim_config import SimulationConfig
 from pysfrl.sim.components.peds import Pedestrians
 from pysfrl.sim.components.obstaclestate import ObstacleState
@@ -28,6 +29,9 @@ class Simulator(object):
         self.peds = Pedestrians(self.cfg)
         self.time_step = 0
         self.time_table = None
+
+        # result
+        self.success = False
 
         # model (if rl)
         self.model = None
@@ -84,8 +88,9 @@ class Simulator(object):
                 break
 
             if self.time_step>1000:
-                success = False
+                success = False                
                 break
+        self.success = success
         return success
 
     def check_finished(self):
@@ -94,6 +99,7 @@ class Simulator(object):
     def step_once(self, external_force=None):        
         # 시뮬레이션 종료 여부 판단(모든 agent 끝났을 때)
         if self.check_finished():
+            self.success = True
             return True
         
         whole_state = self.current_state.copy()        
@@ -148,6 +154,7 @@ class Simulator(object):
     def reset(self):
         self.peds.reset()
         self.time_step = 0
+        self.success = False
         return
 
     def calcualte_next_visible_state(self, visible_state, force):

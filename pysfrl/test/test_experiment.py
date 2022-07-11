@@ -26,3 +26,4 @@ def generate_scene_from_video():
 def test_simulation_in_experiment_environment():
     exp = ExpSetting(exp_folder_path=exp_folder_path)
     exp.simulate_every_scene()
+

@@ -1,5 +1,7 @@
 # test
 tensorboard/
+testground.py
+
 # cache
 __pycache__
 *.log
