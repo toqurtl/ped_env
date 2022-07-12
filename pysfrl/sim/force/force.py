@@ -6,7 +6,7 @@ import numpy as np
 
 # sim: Simulator
 
-class Force(object):
+class Force(object):    
 
     @classmethod
     def extra_force(cls, sim_cfg: SimulationConfig, state, obstacles):
@@ -14,27 +14,32 @@ class Force(object):
 
 
     @classmethod
-    def desired_force(cls, sim_cfg: SimulationConfig, state, obstacles=None, model=None):
+    def desired_force(cls, sim_cfg: SimulationConfig, state, visible_max_speeds, obstacles=None, model=None):
         cfg = sim_cfg.force_config["desired_force"]   
         relaxation_time = cfg["relaxation_time"]
         goal_threshold = cfg["goal_threshold"]
-               
-        max_speeds = CustomUtils.max_speeds(len(state), sim_cfg.max_speed)
+        
+        # max_speeds = CustomUtils.max_speeds(len(state), sim_cfg.max_speed)
+        max_speeds = visible_max_speeds
+        
         # visible_state, visible_idx, visible_max_speeds = sim.get_visible_info()
-        pos, vel, goal = state[:, 0:2], state[:, 2:4], state[:, 4:6]       
+        pos, vel, goal = state[:, 0:2], state[:, 2:4], state[:, 4:6]               
         direction, dist = stateutils.normalize(goal - pos)
-        force = np.zeros((len(state), 2))
+        
+        force = np.zeros((len(state), 2))        
         force[dist > goal_threshold] = (
             direction * max_speeds.reshape((-1, 1)) - vel.reshape((-1, 2))
         )[dist > goal_threshold, :]
+        
         force[dist <= goal_threshold] = -1.0 * vel[dist <= goal_threshold]        
-        force /= relaxation_time        
+        
+        force /= relaxation_time            
+
         return force * cfg["factor"]
 
     @classmethod
     def obstacle_force(cls, sim_cfg: SimulationConfig, state, obstacles, model=None):
-        cfg = sim_cfg.force_config["obstacle_force"]
-        
+        cfg = sim_cfg.force_config["obstacle_force"]        
         sigma = cfg["sigma"]
         threshold = cfg["threshold"] + sim_cfg.agent_radius
         force = np.zeros((len(state), 2))
@@ -67,7 +72,7 @@ class Force(object):
         term_2 = lamb + (1-lamb)*(1 + angle_matrix)/2
         term = alpha * term_1 * term_2
         term = np.repeat(np.expand_dims(term, axis=2), 2, axis=2)
-        e_ij = CustomUtils.ped_directions(state)
+        e_ij = CustomUtils.ped_directions(state)        
         return -np.sum(e_ij * term, axis=1)
 
     @classmethod

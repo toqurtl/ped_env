@@ -27,16 +27,16 @@ video_folder_path = os.path.join(onedrive_path, "연구\\pandemic\\data\\ped_tex
 exp_2 = ExpSetting(exp_folder_path=exp_folder_path_2)
 
 
-# exp = ExpSetting(exp_folder_path=exp_folder_path)
+exp = ExpSetting(exp_folder_path=exp_folder_path)
 
-# exp.set_default_cfg_path(RL_CFG_PATH)
+exp.set_default_cfg_path(RL_CFG_PATH)
 
-# exp.simulate_scene("29")
+exp.simulate_scene("29")
 # exp_2.simulate_scene("29")
-env = PysfrlEnv(exp_2.get_simulator_list())
-model = PPO("MlpPolicy", env, verbose=1, tensorboard_log="./tensorboard/")
-model.learn(total_timesteps=150000, tb_log_name="0708_2")
-model.save("model/0708_3")
+# env = PysfrlEnv(exp_2.get_simulator_list())
+# model = PPO("MlpPolicy", env, verbose=1, tensorboard_log="./tensorboard/")
+# model.learn(total_timesteps=150000, tb_log_name="0708_2")
+# model.save("model/0708_3")
 # # # print('evaluate')
 # # model = PPO.load("model/test_model.zip", env=env)
 

@@ -101,9 +101,13 @@ class SimResult(object):
             if data[Index.finished.index] == 1:               
                 gt_finish = idx-1
                 break
+        try:
+            last_traj_x = origin_person_data[origin_finish, Index.px.index]
+            last_traj_y = origin_person_data[origin_finish, Index.py.index]    
+        except:
+            last_traj_x = origin_person_data[origin_finish-1, Index.px.index]
+            last_traj_y = origin_person_data[origin_finish-1, Index.py.index]    
 
-        last_traj_x = origin_person_data[origin_finish, Index.px.index]
-        last_traj_y = origin_person_data[origin_finish, Index.py.index]    
         gt_traj_x = gt_person_data[gt_finish-1, Index.px.index]
         gt_traj_y = gt_person_data[gt_finish-1, Index.py.index]
         
@@ -147,7 +151,10 @@ class SimResult(object):
         avg = 0
         for person_idx in range(0, num_person):        
             ctn, total_time, check_data = SimResult.risk_index_of_person(origin_states, person_idx, distance)
-            avg += ctn / total_time
+            try:
+                avg += ctn / total_time
+            except:
+                avg += 0
         return avg / num_person
 
     @staticmethod

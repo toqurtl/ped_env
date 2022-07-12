@@ -16,8 +16,6 @@ repulsive_force_dict ={
     "nn_repulsive": Force.nn_repulsive
 }
 
-STEP_WIDTH = 0.067
-
 class Simulator(object):
     def __init__(self, config: SimulationConfig):
         # configuration
@@ -29,6 +27,12 @@ class Simulator(object):
         self.peds = Pedestrians(self.cfg)
         self.time_step = 0
         self.time_table = None
+        self.step_width_list = []
+        self.step_width = 0.065
+
+        speed_vecs = self.current_state[:, 2:4]
+        initial_speeds = np.array([np.linalg.norm(s) for s in speed_vecs])        
+        self.max_speeds = self.cfg.max_speed_multiplier * self.initial_speeds
 
         # result
         self.success = False
@@ -39,15 +43,16 @@ class Simulator(object):
         if self.cfg.force_config["repulsive_force"]["name"] == "nn_repulsive":
             model_path = self.cfg.force_config["repulsive_force"]["params"]["model_path"]            
             self.model = PPO.load(model_path)
+        return
 
     # 고정값
     @property
     def initial_state(self):
         return self.cfg.initial_state_arr
 
-    @property
-    def max_speeds(self):
-        return np.ones((self.num_peds())) * self.cfg.max_speed
+    # @property
+    # def max_speeds(self):
+    #     return np.ones((self.num_peds())) * self.cfg.max_speed
 
     @property
     def current_state(self):
@@ -72,16 +77,32 @@ class Simulator(object):
     def peds_states(self):
         return np.array(self.peds.states)
 
-    @property
-    def step_width(self):
-        return self.cfg.step_width 
+    def set_time_table(self, time_table):
+        self.time_table = time_table        
+
+    # @property
+    # def step_width(self):
+    #     return self.cfg.step_width 
 
     def get_visible_info(self):
         return self.peds.visible_info()
 
+    def set_step_width(self):
+        new_step_width = 0 
+        if self.time_table is None:
+            new_step_width = 0.133
+        else:
+            try: 
+                new_step_width = self.time_table[self.time_step]                
+            except IndexError:
+                new_step_width = 0.133            
+        self.step_width = new_step_width
+        self.step_width_list.append(new_step_width)
+        return 
+
     # 시뮬레이션에 필요한 함수
     def simulate(self):
-        success = True
+        success = True        
         while True:            
             is_finished = self.step_once()           
             if is_finished:
@@ -102,7 +123,8 @@ class Simulator(object):
             self.success = True
             return True
         
-        whole_state = self.current_state.copy()        
+        whole_state = self.current_state.copy()
+        self.set_step_width()
         whole_state = self.next_state(whole_state, external_force)
         whole_state = self.update_new_state(whole_state)  
         
@@ -136,7 +158,9 @@ class Simulator(object):
         return whole_state
 
     def extra_forces(self, visible_state):
-        desired_force = Force.desired_force(self.cfg, visible_state)
+        visible_state, visible_idx = self.get_visible_info()
+        
+        desired_force = Force.desired_force(self.cfg, visible_state,self.max_speeds[visible_idx])
         obstacle_force = Force.obstacle_force(self.cfg, visible_state, self.get_obstacles())
         return desired_force + obstacle_force
 
