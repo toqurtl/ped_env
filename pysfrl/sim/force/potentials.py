@@ -24,17 +24,18 @@ class PedPedPotential(object):
         speeds_b = np.expand_dims(speeds, axis=0)
         speeds_b_abc = np.expand_dims(speeds_b, axis=2)  # abc = alpha, beta, coordinates
         e_b = np.expand_dims(desired_directions, axis=0)
-
         in_sqrt = (
             np.linalg.norm(r_ab, axis=-1)
             + np.linalg.norm(r_ab - self.delta_t * speeds_b_abc * e_b, axis=-1)
         ) ** 2 - (self.delta_t * speeds_b) ** 2
+        
         np.fill_diagonal(in_sqrt, 0.0)
-
+        
         return 0.5 * np.sqrt(in_sqrt)
 
     def value_r_ab(self, r_ab, speeds, desired_directions):
         """Value of potential explicitly parametrized with r_ab."""
+        
         return self.v0 * np.exp(-self.b(r_ab, speeds, desired_directions) / self.sigma)
 
     @staticmethod
@@ -58,7 +59,7 @@ class PedPedPotential(object):
         
         dx = np.array([[[delta, 0.0]]])
         dy = np.array([[[0.0, delta]]])
-        
+
         v = self.value_r_ab(r_ab, speeds, desired_directions)
         
         dvdx = (self.value_r_ab(r_ab + dx, speeds, desired_directions) - v) / delta

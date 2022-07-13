@@ -9,8 +9,8 @@ import numpy as np
 class Force(object):    
 
     @classmethod
-    def extra_force(cls, sim_cfg: SimulationConfig, state, obstacles):
-        return cls.desired_force(sim_cfg, state) + cls.obstacle_force(sim_cfg, state, obstacles)
+    def extra_force(cls, sim_cfg: SimulationConfig, state, obstacles, visible_max_speeds):
+        return cls.desired_force(sim_cfg, state, visible_max_speeds) + cls.obstacle_force(sim_cfg, state, obstacles)
 
 
     @classmethod
@@ -33,8 +33,7 @@ class Force(object):
         
         force[dist <= goal_threshold] = -1.0 * vel[dist <= goal_threshold]        
         
-        force /= relaxation_time            
-
+        force /= relaxation_time           
         return force * cfg["factor"]
 
     @classmethod
@@ -63,20 +62,20 @@ class Force(object):
         return force * cfg["factor"]
 
     @classmethod
-    def basic_sfm(cls, sim_cfg: SimulationConfig, state, obstacles=None, model=None):        
+    def basic_sfm(cls, sim_cfg: SimulationConfig, state, step_width, obstacles=None, model=None, visible_max_speeds=None):        
         cfg = sim_cfg.force_config["repulsive_force"]["params"]
         distance_mat = CustomUtils.get_distance_matrix(state) 
         alpha, beta, lamb = cfg["alpha"], cfg["beta"], cfg["lambda"]        
-        angle_matrix = CustomUtils.get_angle_matrix(state)
+        angle_matrix = CustomUtils.get_angle_matrix(state, step_width)
         term_1 = np.exp((0.6 - distance_mat) / beta)
         term_2 = lamb + (1-lamb)*(1 + angle_matrix)/2
         term = alpha * term_1 * term_2
         term = np.repeat(np.expand_dims(term, axis=2), 2, axis=2)
-        e_ij = CustomUtils.ped_directions(state)        
+        e_ij = CustomUtils.ped_directions(state)
         return -np.sum(e_ij * term, axis=1)
 
     @classmethod
-    def social_sfm_1(cls, sim_cfg: SimulationConfig, state, obstacles=None, model=None):        
+    def social_sfm_1(cls, sim_cfg: SimulationConfig, state, step_width, obstacles=None, model=None, visible_max_speeds=None):        
         cfg = sim_cfg.force_config["repulsive_force"]["params"]        
         distance_mat = CustomUtils.get_distance_matrix(state)        
         desired_social_distance = cfg["desired_distance"]        
@@ -85,7 +84,7 @@ class Force(object):
         np.fill_diagonal(in_desired_distance, False)
         in_desired_distance = in_desired_distance.astype(int)
         
-        angle_matrix = CustomUtils.get_angle_matrix(state)        
+        angle_matrix = CustomUtils.get_angle_matrix(state, step_width)        
         term_1 = 0.5 * (distance_mat - desired_social_distance)        
         term_2 = 0.5 + (1-0.5)*(1 + angle_matrix)/2 
         term_1 = np.exp((distance_mat - desired_social_distance) / beta)
@@ -96,12 +95,12 @@ class Force(object):
         return -np.sum(e_ij * term, axis=1)
 
     @classmethod
-    def social_sfm_2(cls, sim_cfg: SimulationConfig, state, obstacles=None, model=None):        
+    def social_sfm_2(cls, sim_cfg: SimulationConfig, state, step_width, obstacles=None, model=None, visible_max_speeds=None):        
         cfg = sim_cfg.force_config["repulsive_force"]["params"]
         alpha, beta, lamb = cfg["alpha"], cfg["beta"], cfg["lambda"]
         small_alpha = cfg["small_alpha"]
         distance_mat = CustomUtils.get_distance_matrix(state) 
-        angle_matrix = CustomUtils.get_angle_matrix(state)
+        angle_matrix = CustomUtils.get_angle_matrix(state, step_width)
         angle_term = 0.5 + (1-0.5)*(1 + angle_matrix)/2                        
         if len(distance_mat) > 1:            
             desired_social_distance = cfg["desired_distance"]        
@@ -134,26 +133,26 @@ class Force(object):
             return - force
 
     @classmethod
-    def nn_repulsive(cls, sim_cfg: SimulationConfig, state, obstacles, model):
+    def nn_repulsive(cls, sim_cfg: SimulationConfig, state, step_width, obstacles, model, visible_max_speeds):
         force_list = []
         for s in state:
             idx = s[Index.id.index]
-            action = cls.nn_repulsive_of_idx(sim_cfg, state, obstacles, idx, model)
+            action = cls.nn_repulsive_of_idx(sim_cfg, state, obstacles, idx, model, visible_max_speeds)
             force_list.append(action)
         return np.array(force_list)
             
     @classmethod
-    def nn_repulsive_of_idx(cls, sim_cfg: SimulationConfig, state, obstacles, idx, model):
+    def nn_repulsive_of_idx(cls, sim_cfg: SimulationConfig, state, obstacles, idx, model, visible_max_speeds):
         if len(state) < 2:
             return 0
         else:
-            obs = cls.observation_of_idx(sim_cfg, state, obstacles, idx)
+            obs = cls.observation_of_idx(sim_cfg, state, obstacles, idx, visible_max_speeds)
             action, states = model.predict(obs)
             return action
 
     @classmethod
-    def observation_of_idx(cls, sim_cfg: SimulationConfig, visible_state, obstacles, idx):
+    def observation_of_idx(cls, sim_cfg: SimulationConfig, visible_state, obstacles, idx, visible_max_speeds):
         visible_idx = CustomUtils.find_visible_idx(visible_state, idx)
-        extra_force = Force.extra_force(sim_cfg, visible_state, obstacles)[visible_idx]        
+        extra_force = Force.extra_force(sim_cfg, visible_state, obstacles, visible_max_speeds)[visible_idx]        
         neighbor_info = CustomUtils.neighbor_info(visible_state, visible_idx)        
         return np.concatenate((extra_force, neighbor_info))

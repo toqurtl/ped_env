@@ -97,7 +97,7 @@ class Simulator(object):
             except IndexError:
                 new_step_width = 0.133            
         self.step_width = new_step_width
-        self.step_width_list.append(new_step_width)
+        self.step_width_list.append(new_step_width)        
         return 
 
     # 시뮬레이션에 필요한 함수
@@ -138,10 +138,12 @@ class Simulator(object):
         visible_state, visible_idx = self.get_visible_info()
         # 힘 계산 수행해서 다음 state를 얻어냄
         if len(visible_state) > 0:
-            # visible state들에 대해서 힘 계산해서 변경
-            # next_state = self.do_step(visible_state, external_force)
+            # visible state들에 대해서 힘 계산해서 변경                       
+            
             force = self.compute_forces(visible_state, external_force=external_force)
             visible_state = self.calcualte_next_visible_state(visible_state, force)
+
+                
             # 변경된 visbile state를 whole state에 반영            
             whole_state = UpdateManager.new_state(whole_state, visible_state)
         
@@ -160,12 +162,13 @@ class Simulator(object):
     def extra_forces(self, visible_state):
         visible_state, visible_idx = self.get_visible_info()
         
-        desired_force = Force.desired_force(self.cfg, visible_state,self.max_speeds[visible_idx])
+        desired_force = Force.desired_force(self.cfg, visible_state, self.max_speeds[visible_idx])
         obstacle_force = Force.obstacle_force(self.cfg, visible_state, self.get_obstacles())
         return desired_force + obstacle_force
 
     def repulsive_forces(self, visible_state):
-        return repulsive_force_dict[self.repulsive_force_name](self.cfg, visible_state, self.get_obstacles(), self.model)
+        visible_state, visible_idx = self.get_visible_info()
+        return repulsive_force_dict[self.repulsive_force_name](self.cfg, visible_state, self.step_width, self.get_obstacles(), self.model, self.max_speeds[visible_idx])
 
     def compute_forces(self, visible_state, external_force=None):        
         if external_force is None:            
@@ -182,9 +185,10 @@ class Simulator(object):
         return
 
     def calcualte_next_visible_state(self, visible_state, force):
+        _, visible_idx = self.get_visible_info()
         vel = visible_state[:,2:4]
         desired_velocity = vel + self.step_width * force
-        visible_max_speeds = CustomUtils.max_speeds(len(visible_state), self.cfg.max_speed)
+        visible_max_speeds = self.max_speeds[visible_idx]
         desired_velocity = CustomUtils.capped_velocity(desired_velocity, visible_max_speeds)
         
         visible_state[:, 0:2] += desired_velocity * self.step_width

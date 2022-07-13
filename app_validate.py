@@ -6,6 +6,8 @@ from pysfrl.experiment.file_finder import FileFinder
 import os
 import json
 import numpy as np
+# np.set_printoptions(formatter={'float_kind': lambda x: "{0:0.3f}".format(x)})
+
 
 entry_path = os.path.abspath(".")
 RL_CFG_PATH = os.path.join(entry_path, "pysfrl", "test", "data", "simulation_nn_config.json")
@@ -32,7 +34,7 @@ for sim in exp_2.get_simulator_list():
         print(FileFinder.valid_result(cfg_idx))        
         video_path = os.path.join(video_folder_path, cfg_idx)
         video_data = VideoData(scene_folder=video_path)
-
+        
         sim.set_time_table(video_data.time_table)
         sim.simulate()    
 

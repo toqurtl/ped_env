@@ -23,7 +23,7 @@ class CustomUtils(object):
         return np.array(person_list)
 
     @classmethod
-    def get_angle_matrix(cls, state, step_width=0.067):
+    def get_angle_matrix(cls, state, step_width):
         potential_func = PedPedPotential(step_width, v0=2.1, sigma=0.3)
         f_ab = -1.0 * potential_func.grad_r_ab(state)
         
@@ -88,17 +88,7 @@ class CustomUtils(object):
         # 가장 가까운 사람의 상대위치벡터, 상대속도벡터
         neigbor_info = distance_vec_mat[sort_idx==1][0][:4]
         return neigbor_info
-
-    @classmethod
-    def next_state(cls, state, force, max_speed=2.0, step_width=0.067):
-        vel = state[:,2:4]
-        desired_velocity = vel + step_width * force
-        max_speeds = CustomUtils.max_speeds(len(state), max_speed)
-        desired_velocity = CustomUtils.capped_velocity(desired_velocity, max_speeds)
-        state[:, 0:2] += desired_velocity * step_width
-        state[:, 2:4] = desired_velocity
-        return state[:, 0:2], state[:, 2:4]
-
+        
     # 해당 idx가 visible_idx에서 몇번 째인지
     @classmethod
     def find_visible_idx(cls, visible_state, idx):
