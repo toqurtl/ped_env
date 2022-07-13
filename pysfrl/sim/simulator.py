@@ -104,7 +104,8 @@ class Simulator(object):
     def simulate(self):
         success = True        
         while True:            
-            is_finished = self.step_once()           
+            is_finished = self.step_once()   
+            print(self.time_step)        
             if is_finished:
                 break
 
