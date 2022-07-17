@@ -22,6 +22,19 @@ class ExpSetting(object):
     def set_default_cfg_path(self, cfg_path):
         self.default_cfg_path = cfg_path
 
+    def change_cfg(self, cfg_data):
+        FileFinder.exp_folder_path = self.exp_folder_path
+        cfg_path = FileFinder.exp_cfg()
+        with open(cfg_path, "w") as f:
+            json.dump(cfg_data, f, indent=4)
+
+        for scene_path in self.scene_folder_path_list():            
+            scene_cfg_path = os.path.join(scene_path, "sim_cfg.json")
+            if os.path.isdir(scene_cfg_path):
+                with open(scene_cfg_path, "w") as f:
+                    json.dump(cfg_data, f, indent=4)
+        return
+
     def get_simulator_list(self):
         return [self.get_simulator(cfg_id) for cfg_id in self.cfg_id_list()]            
 
@@ -32,7 +45,12 @@ class ExpSetting(object):
         return folder_list
 
     def cfg_id_list(self):
-        return [cfg_id for cfg_id in os.listdir(self.exp_folder_path)]
+        cfg_list= []
+        for cfg_id in os.listdir(self.exp_folder_path):
+            file_path = os.path.join(self.exp_folder_path, cfg_id)
+            if os.path.isdir(file_path):
+                cfg_list.append(file_path)
+        return cfg_list
         
     def scene_folder_path(self, cfg_id):
         return os.path.join(self.exp_folder_path, cfg_id)
@@ -80,7 +98,7 @@ class ExpSetting(object):
         sim_cfg_path = os.path.join(folder_path, "sim_cfg.json")        
         with open(sim_cfg_path, "r") as f:
             data = json.load(f)
-        sim_cfg.set_config(data)        
+        sim_cfg.set_config(data)     
         return Simulator(sim_cfg)
 
     def simulate_every_scene(self):

@@ -41,7 +41,8 @@ class Simulator(object):
         self.model = None
         
         if self.cfg.force_config["repulsive_force"]["name"] == "nn_repulsive":
-            model_path = self.cfg.force_config["repulsive_force"]["params"]["model_path"]            
+            model_path = self.cfg.force_config["repulsive_force"]["params"]["model_path"]
+            print(self.cfg.config_id, "nn model opening")
             self.model = PPO2.load(model_path)
         return
 

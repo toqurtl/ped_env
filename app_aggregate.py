@@ -11,7 +11,6 @@ import sys
 # np.set_printoptions(formatter={'float_kind': lambda x: "{0:0.3f}".format(x)})
 import tensorflow as tf
 
-
 old_v = tf.logging.get_verbosity()
 tf.logging.set_verbosity(tf.logging.ERROR)
 env_name = sys.argv[1]
@@ -33,31 +32,6 @@ FileFinder.exp_folder_path = exp_folder_path
 FileFinder.video_folder_path = video_folder_path
 
 simulator_list = exp.get_simulator_list()
-
-
-for sim in simulator_list:
-    cfg_idx = sim.cfg.config_id    
-    print(FileFinder.valid_result(cfg_idx))
-    video_path = os.path.join(video_folder_path, cfg_idx)
-    print(video_path)
-    video_data = VideoData(scene_folder=video_path)
-    
-    sim.set_time_table(video_data.time_table)
-    sim.simulate()
-
-    sim_result_path = FileFinder.sim_result(cfg_idx)
-    summary_path = FileFinder.sim_summary(cfg_idx)
-    fig_path = FileFinder.sim_trajectory(cfg_idx)
-    SimResult.sim_result_to_json(sim, sim_result_path)
-    SimResult.summary_to_json(sim, summary_path)
-    fig, ax = PlotGenerator.generate_sim_result_plot((-5,5,-10,10), sim)    
-    fig.savefig(fig_path)
-
-    origin_states = sim.peds_states
-    gt_states = video_data.ground_truth_state()
-    valid_path = FileFinder.valid_result(cfg_idx)
-    SimResult.validate_to_json(origin_states, gt_states, FileFinder.valid_result(cfg_idx))
-
 
 ade = 0
 dtw = 0

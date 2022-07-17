@@ -1,0 +1,116 @@
+{
+    "config_id": "basic_sfm_2_1",
+    "ped_info":{
+        "0": {
+            "goal_schedule": {
+                "0": {
+                    "tx": 2.07364048012538,
+                    "ty": -3.99561309508136
+                }
+            },
+            "num_phase": 1,
+            "final_phase": 0,
+            "start_time": 0
+        },
+        "1": {
+            "goal_schedule": {
+                "0": {
+                    "tx": 0,
+                    "ty": -0.6
+                },
+                "1": {
+                    "tx": 3.33168152161276,
+                    "ty": 8.7681927478008
+                }
+            },
+            "num_phase": 2,
+            "final_phase": 1,
+            "start_time": 1
+        }
+    },
+		"initial_state":{
+			"0": {
+            "id": 0,
+            "px": 2.47353665920838,
+            "py": 8.62554952947498,
+            "vx": 0.1906371811619036,
+            "vy": -1.4902233968908571,
+            "gx": 2.07364048012538,
+            "gy": -3.99561309508136,
+            "distancing": 2,
+            "start_time": 0,
+            "visible": 1,
+            "tau": 0.5,
+            "finished": 0,
+            "phase": 0,
+            "final_phase": 0
+        },
+        "1": {
+            "id": 1,
+            "px": -1.32788894545828,
+            "py": -0.780883228066265,
+            "vx": 1.1152130187629863,
+            "vy": 0.6153634626472955,
+            "gx": 0,
+            "gy": -0.6,
+            "distancing": 2,
+            "start_time": 1,
+            "visible": 0,
+            "tau": 0.5,
+            "finished": 0,
+            "phase": 0,
+            "final_phase": 1
+        }
+    },
+    "group_info":[
+
+    ],
+    "obstacles":[
+        [5.15, 5.15, -10, 16],
+        [-1.44, -1.44, -10, -1.2], 
+        [-1.44, -1.44, 0, 6], 
+        [-1.44, -1.44, 7.2, 16],
+        [-1.44, 0, 7.2, 7.2],
+        [0, 0, 7.2, 8.2],
+        [-1.44, 0, 8.2, 8.2],
+        [-1.44, 0, 0, 0],
+        [0, 0, 0, 1],
+        [-1.44, 0, 1, 1]
+    ],
+    "scene":{
+        "enable_group": true,
+        "agent_radius": 0.35,
+        "step_width": 0.063,
+        "max_speed_multiplier": 1.1,
+        "max_speed": 2.0,
+        "tau": 0.5,
+        "resolution": 10
+    },
+    "forces":{
+        "force_save": true,
+        "desired_force":{
+                "factor": 1.0,
+                "relaxation_time": 0.5,
+                "goal_threshold": 0.2
+            },
+        "obstacle_force":{
+                "factor": 1.5,
+                "sigma": 0.2,
+                "threshold": 0.2
+        },
+        "repulsive_force":{ 
+            "name": "my_force_3",
+            "params":{
+                "factor": 1,
+                "desired_distance": 2,
+                "alpha": 2000,
+                "beta": 0.08,
+                "lambda": 0.5
+            }
+        }        
+    },
+    "condition":{
+        "simul_time_threshold": 1000
+    }
+
+}

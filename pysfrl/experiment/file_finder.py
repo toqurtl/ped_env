@@ -24,6 +24,10 @@ class FileFinder(object):
     @classmethod
     def sim_cfg(cls, cfg_id):
         return os.path.join(cls.exp_folder_path, cfg_id, "sim_cfg.json")
+
+    @classmethod
+    def exp_cfg(cls):
+        return os.path.join(cls.exp_folder_path, "sim_cfg.json")
     
     @classmethod
     def sim_result(cls, cfg_id):
