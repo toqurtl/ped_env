@@ -16,6 +16,6 @@ matplotlib
 
 # reinforcement
 tensorboard
-torch
-gym
-stable-baselines3
+gym==0.19.0
+stable-baselines
+tensorflow == 1.14.0

@@ -9,6 +9,7 @@ from pysfrl.sim.update_manager import UpdateManager
 from pysfrl.sim.utils.custom_utils import CustomUtils
 
 
+
 class PysfrlEnv(gym.Env):
     #렌더링 모드
     metadata = {'render_modes': ['human']}
@@ -99,7 +100,7 @@ class PysfrlEnv(gym.Env):
         obs = self.observation(sim, visible_state, self.learned_idx)
         neighbor_distance = np.linalg.norm(obs[2:4])
         if neighbor_distance < 1:
-            reward -= 2
+            reward -= 1
         return reward
 
     def info(self):

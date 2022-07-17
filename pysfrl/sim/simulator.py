@@ -5,7 +5,7 @@ from pysfrl.sim.components.obstaclestate import ObstacleState
 from pysfrl.sim.update_manager import UpdateManager
 from pysfrl.sim.force.force import Force
 from pysfrl.sim.utils.custom_utils import CustomUtils
-from stable_baselines3 import PPO
+from stable_baselines import PPO2
 import numpy as np
 
 
@@ -42,7 +42,7 @@ class Simulator(object):
         
         if self.cfg.force_config["repulsive_force"]["name"] == "nn_repulsive":
             model_path = self.cfg.force_config["repulsive_force"]["params"]["model_path"]            
-            self.model = PPO.load(model_path)
+            self.model = PPO2.load(model_path)
         return
 
     # 고정값
@@ -104,8 +104,7 @@ class Simulator(object):
     def simulate(self):
         success = True        
         while True:            
-            is_finished = self.step_once()   
-            print(self.time_step)        
+            is_finished = self.step_once()               
             if is_finished:
                 break
 

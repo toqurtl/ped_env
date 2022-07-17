@@ -6,6 +6,10 @@ class FileFinder(object):
     video_folder_path = "."
 
     @classmethod
+    def exp_result(cls):
+        return os.path.join(cls.exp_folder_path, "summary.json")
+
+    @classmethod
     def video_trajectory(cls, cfg_id):
         return os.path.join(cls.exp_folder_path, cfg_id, "data", "trajectory.json")
     
@@ -16,7 +20,6 @@ class FileFinder(object):
     @classmethod
     def basic_info(cls, cfg_id):
         return os.path.join(cls.exp_folder_path, cfg_id, "data", "basic_info.json")
-
 
     @classmethod
     def sim_cfg(cls, cfg_id):
