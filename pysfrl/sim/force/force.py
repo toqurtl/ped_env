@@ -156,3 +156,42 @@ class Force(object):
         extra_force = Force.extra_force(sim_cfg, visible_state, obstacles, visible_max_speeds)[visible_idx]        
         neighbor_info = CustomUtils.neighbor_info(visible_state, visible_idx)        
         return np.concatenate((extra_force, neighbor_info))
+
+
+    @classmethod
+    def rule_based_force(cls, sim_cfg: SimulationConfig, state, step_width, obstacles=None, model=None, visible_max_speeds=None):
+        cfg = sim_cfg.force_config["repulsive_force"]["params"]        
+        lambda_importance = cfg["lambda_importance"]
+        gamma = cfg["gamma"]
+        n = cfg["n"]
+        n_prime = cfg["n_prime"]
+
+        pos_diff = stateutils.each_diff(state[:, 0:2])  # n*(n-1)x2 other - self        
+        diff_direction, diff_length = stateutils.normalize(pos_diff)
+        vel_diff = -1.0 * stateutils.each_diff(state[:, 2:4])  # n*(n-1)x2 self - other
+        
+        # compute interaction direction t_ij
+        interaction_vec = lambda_importance * vel_diff + diff_direction
+        
+        interaction_direction, interaction_length = stateutils.normalize(interaction_vec)
+
+        # compute angle theta (between interaction and position difference vector)
+        theta = stateutils.vector_angles(interaction_direction) - stateutils.vector_angles(
+            diff_direction
+        )
+        # compute model parameter B = gamma * ||D||
+        B = gamma * interaction_length
+        
+
+        force_velocity_amount = np.exp(-1.0 * diff_length / B - np.square(n_prime * B * theta))
+        force_angle_amount = -np.sign(theta) * np.exp(
+            -1.0 * diff_length / B - np.square(n * B * theta)
+        )
+        force_velocity = force_velocity_amount.reshape(-1, 1) * interaction_direction
+        force_angle = force_angle_amount.reshape(-1, 1) * stateutils.left_normal(
+            interaction_direction
+        )
+
+        force = force_velocity + force_angle  # n*(n-1) x 2
+        force = np.sum(force.reshape((len(state), -1, 2)), axis=1)   
+        return force * cfg["factor"]

@@ -1,44 +1,88 @@
-
 from pysfrl.data.video_data import VideoData
 from pysfrl.experiment.exp_setting import ExpSetting
 from pysfrl.rl.env import PysfrlEnv
-from stable_baselines3.common.evaluation import evaluate_policy
-
-from stable_baselines3 import PPO
+from pysfrl.sim.utils.sim_result import SimResult
+from pysfrl.experiment.file_finder import FileFinder
+from pysfrl.visualize.plots import PlotGenerator
 import os
-import torch
+import json
+import numpy as np
+import sys
+# np.set_printoptions(formatter={'float_kind': lambda x: "{0:0.3f}".format(x)})
+import tensorflow as tf
+import pickle
 
-# GPU 할당 변경하기
-GPU_NUM = 0 # 원하는 GPU 번호 입력
-device = torch.device(f'cuda:{GPU_NUM}' if torch.cuda.is_available() else 'cpu')
-torch.cuda.set_device(device) # change allocation of current GPU
 
-print ('# Current cuda device: ', torch.cuda.current_device()) # check
+old_v = tf.logging.get_verbosity()
+tf.logging.set_verbosity(tf.logging.ERROR)
+env_name = sys.argv[1]
 
 entry_path = os.path.abspath(".")
-RL_CFG_PATH = os.path.join(entry_path, "pysfrl", "test", "data", "simulation_nn_config.json")
-
 onedrive_path = os.environ['onedrive']
-exp_folder_path = os.path.join(onedrive_path, "연구\\pandemic\\experiment\\0708")
-exp_folder_path_2 = os.path.join(onedrive_path, "연구\\pandemic\\experiment\\0708_2")
-video_folder_path = os.path.join(onedrive_path, "연구\\pandemic\\data\\ped_texas\\new\\whole")
+exp_path = "연구\\pandemic\\experiment\\0717_fixed"
+vid_path = "연구\\pandemic\\data\\ped_texas\\new\\whole"
 
-
-exp_2 = ExpSetting(exp_folder_path=exp_folder_path_2)
-
+exp_folder_path = os.path.join(onedrive_path, exp_path, env_name)
+video_folder_path = os.path.join(onedrive_path, vid_path)
 
 exp = ExpSetting(exp_folder_path=exp_folder_path)
+cfg_path = os.path.join(exp_folder_path, "sim_cfg.json")
+exp.set_default_cfg_path(cfg_path)
 
-exp.set_default_cfg_path(RL_CFG_PATH)
 
-exp.simulate_scene("29")
-# exp_2.simulate_scene("29")
-# env = PysfrlEnv(exp_2.get_simulator_list())
-# model = PPO("MlpPolicy", env, verbose=1, tensorboard_log="./tensorboard/")
-# model.learn(total_timesteps=150000, tb_log_name="0708_2")
-# model.save("model/0708_3")
-# # # print('evaluate')
-# # model = PPO.load("model/test_model.zip", env=env)
+FileFinder.exp_folder_path = exp_folder_path
+FileFinder.video_folder_path = video_folder_path
 
-# mean_reward, std_reward = evaluate_policy(model, env, n_eval_episodes=10, deterministic=True)
-# print(f"mean_reward={mean_reward:.2f} +/- {std_reward}")
+folder_path_list = exp.scene_folder_path_list()
+
+ade_list = []
+dtw_list = []
+
+high_sdvr_ade_list = []
+low_sdvr_ade_list = []
+
+high_sdvr_dtw_list = []
+low_sdvr_dtw_list = []
+
+for path in folder_path_list:
+    if os.path.isdir(path):
+        print(path)      
+        valid_path = os.path.join(path, "valid.json")
+        with open(valid_path, "r") as f:
+            data = json.load(f)
+        
+        sdvr_sim, sdvr_error = data["sdvr"], data["sdvr_error"]
+        try:
+            sdvr = sdvr_sim / (1+sdvr_error)
+        except:
+            sdvr = 0
+        ade_list.append(data["ade"])
+        dtw_list.append(data["dtw"])
+        if sdvr > 0.247:
+            high_sdvr_ade_list.append(data["ade"])
+            high_sdvr_dtw_list.append(data["dtw"])
+        else:
+            low_sdvr_ade_list.append(data["ade"])
+            low_sdvr_dtw_list.append(data["dtw"])
+
+def avg(temp_list):
+    return sum(temp_list) / len(temp_list)
+
+ade_avg, dtw_avg = avg(ade_list), avg(dtw_list)
+high_ade_avg, high_dtw_avg = avg(high_sdvr_ade_list), avg(high_sdvr_dtw_list)
+low_ade_avg, low_dtw_avg = avg(low_sdvr_ade_list), avg(low_sdvr_dtw_list)
+
+data ={
+    "ade": ade_avg,
+    "dtw": dtw_avg,
+    "high_ade": high_ade_avg,
+    "high_dtw": high_dtw_avg,
+    "low_ade": low_ade_avg,
+    "low_dtw": low_dtw_avg,
+}
+
+with open("test.json", "w") as f:
+    json.dump(data, f, indent=4)
+        
+
+        

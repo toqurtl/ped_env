@@ -69,6 +69,7 @@ for sim in simulator_list:
         data = json.load(f)
     ade += data["ade"]
     dtw += data["dtw"]
+    
 
 data = {
     "ade": ade/ctn,

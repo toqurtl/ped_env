@@ -13,11 +13,10 @@ repulsive_force_dict ={
     "my_force": Force.social_sfm_1,
     "my_force_2": Force.social_sfm_2,
     "my_force_3": Force.basic_sfm,
-    "nn_repulsive": Force.nn_repulsive,
-    "rule_config": Force.rule_based_force
+    "nn_repulsive": Force.nn_repulsive
 }
 
-class Simulator(object):
+class VideoSimulator(object):
     def __init__(self, config: SimulationConfig):
         # configuration
         self.cfg: SimulationConfig = config        

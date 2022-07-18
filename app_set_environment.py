@@ -29,11 +29,6 @@ exp.set_default_cfg_path(cfg_path)
 
 exp_cfg_path = os.path.join(exp_folder_path, "sim_cfg.json")
 
-with open(cfg_path, "r") as f:
-    data = json.load(f)
-    
-with open(exp_cfg_path, "w") as f:
-    json.dump(data, f, indent=4)
 
 # 비디오에서 scene 추가
 for vid_id in os.listdir(video_folder_path):
@@ -42,5 +37,10 @@ for vid_id in os.listdir(video_folder_path):
     video_data = VideoData(scene_folder=vid_path)
     exp.add_scene_from_video(video_data, vid_id)
 
+
+with open(cfg_path, "r") as f:
+    data = json.load(f)
     
+with open(exp_cfg_path, "w") as f:
+    json.dump(data, f, indent=4)    
 
