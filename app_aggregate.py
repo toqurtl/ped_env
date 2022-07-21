@@ -33,8 +33,7 @@ FileFinder.video_folder_path = video_folder_path
 
 simulator_list = exp.get_simulator_list()
 
-ade = 0
-dtw = 0
+ade, dtw, sdvr, sdvr_error, simulation_time_error, fde = 0, 0, 0, 0, 0, 0
 ctn = len(simulator_list)
 for sim in simulator_list:
     cfg_idx = sim.cfg.config_id
@@ -43,10 +42,19 @@ for sim in simulator_list:
         data = json.load(f)
     ade += data["ade"]
     dtw += data["dtw"]
+    sdvr += data["sdvr"]
+    simulation_time_error += data["simulation_time_error"]
+    sdvr_error += data["sdvr_error"]
+    fde += data["fde"]
+    
 
 data = {
     "ade": ade/ctn,
-    "dtw": dtw/ctn
+    "dtw": dtw/ctn,
+    "sdvr": sdvr/ctn,
+    "sdvr_error": sdvr_error/ctn,
+    "simulation_time_error": simulation_time_error/ctn,
+    "fde": fde/ctn
 }
 
 file_path = FileFinder.exp_result()
