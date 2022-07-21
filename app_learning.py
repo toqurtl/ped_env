@@ -41,5 +41,5 @@ else:
     env = DummyVecEnv([lambda: env])
     model = PPO2.load(model_path, env=env)
 
-model.learn(total_timesteps=100000, tb_log_name="reward_1")
+model.learn(total_timesteps=10000, tb_log_name="reward_1", reset_num_timesteps=False)
 model.save(model_path)
