@@ -99,8 +99,13 @@ class PysfrlEnv(gym.Env):
         # idx를 주면 목적지와의 거리를 계산하는 함수
         obs = self.observation(sim, visible_state, self.learned_idx)
         neighbor_distance = np.linalg.norm(obs[2:4])
-        if neighbor_distance < 1:
-            reward -= 1
+        if neighbor_distance < 0.35:
+            reward -= 5
+        elif 0.35 < neighbor_distance < 1:
+            reward -= 0.5
+        elif neighbor_distance < 1.5:
+            reward -= 0.1
+        
         return reward
 
     def info(self):
