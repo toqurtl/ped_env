@@ -35,6 +35,11 @@ for sim in sim_list:
     sim.set_time_table(video_data.time_table)
 
 env = PysfrlEnv(sim_list)
-model = PPO2("MlpPolicy", env, verbose=1, tensorboard_log="./tensorboard/0721")
+if model_path is None:
+    model = PPO2("MlpPolicy", env, verbose=1, tensorboard_log="./tensorboard/0721")
+else:
+    env = DummyVecEnv([lambda: env])
+    model = PPO2.load(model_path, env=env)
+
 model.learn(total_timesteps=100000, tb_log_name="reward_1")
-model.save("model/reward_1")
+model.save(model_path)
