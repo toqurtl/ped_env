@@ -14,6 +14,7 @@ import tensorflow as tf
 
 old_v = tf.logging.get_verbosity()
 tf.logging.set_verbosity(tf.logging.ERROR)
+
 env_name = sys.argv[1]
 
 entry_path = os.path.abspath(".")
